@@ -7,6 +7,9 @@ use React\Promise\Deferred;
 
 class Prober
 {
+    const ERROR_PROTOCOL = 4;
+    const ERROR_CLOSED = 3;
+
     private $binary;
 
     public function __construct(Binary $binary = null)
@@ -52,7 +55,7 @@ class Prober
 
             if (isset($buffer[4])) {
                 $stream->removeListener('data', $fn);
-                $deferred->reject(new \UnexpectedValueException('Expected 4 bytes response, received more data, is this a quassel core?'));
+                $deferred->reject(new \UnexpectedValueException('Expected 4 bytes response, received more data, is this a quassel core?', Prober::ERROR_PROTOCOL));
                 return;
             }
 
@@ -64,7 +67,7 @@ class Prober
         $stream->on('data', $fn);
 
         $stream->on('close', function() use ($deferred) {
-            $deferred->reject(new \RuntimeException('Stream closed, does this (old?) server support probing?'));
+            $deferred->reject(new \RuntimeException('Stream closed, does this (old?) server support probing?', Prober::ERROR_CLOSED));
         });
 
         return $deferred->promise();

@@ -40,16 +40,34 @@ class Factory
             $parts['port'] = 4242;
         }
 
-        return $this->connector->create($parts['host'], $parts['port'])->then(array($this, 'handleStream'));
-    }
+        $connector = $this->connector;
+        $prober = $this->prober;
 
-    /** @internal */
-    public function handleStream(Stream $stream)
-    {
-        return $this->prober->probe($stream)->then(function ($probe) use ($stream) {
-            // probe returned successfully, create new client
-            // TODO: ignore $probe value for now, should check for protocol, compression and SSL
-            return new Client($stream);
-        });
+        return $connector->create($parts['host'], $parts['port'])->then(
+            function (Stream $stream) use ($prober, $connector, $parts) {
+                $probe = 0;
+
+                return $prober->probe($stream)->then(
+                    function ($ret) use (&$probe, $stream) {
+                        // probe returned successfully, create new client for this stream
+                        $probe = $ret;
+
+                        return $stream;
+                    },
+                    function ($e) use ($connector, $parts) {
+                        if ($e->getCode() === Prober::ERROR_CLOSED) {
+                            // legacy servers will terminate connection while probing
+                            return $connector->create($parts['host'], $parts['port']);
+                        }
+                        throw $e;
+                    }
+                )->then(
+                    function (Stream $stream) use ($probe) {
+                        // TODO: ignore $probe value for now, should check for protocol, compression and SSL
+                        return new Client($stream);
+                    }
+                );
+            }
+        );
     }
 }
