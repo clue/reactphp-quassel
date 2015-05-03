@@ -28,7 +28,7 @@ class PacketSplitter
             }
 
             // parse packet and advance buffer
-            $fn(substr($this->buffer, 4, $length));
+            call_user_func($fn, substr($this->buffer, 4, $length));
             $this->buffer = substr($this->buffer, 4 + $length);
         }
     }
