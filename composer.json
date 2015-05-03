@@ -1,0 +1,27 @@
+{
+    "name": "clue/quassel-react",
+    "description": "Simple streaming, event-driven access to your Quassel IRC core",
+    "keywords": ["Quassel", "IRC", "ReactPHP", "async"],
+    "homepage": "https://github.com/clue/php-quassel-react",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christian Lück",
+            "email": "christian@lueck.tv"
+        }
+    ],
+    "autoload": {
+        "psr-4": { "Clue\\React\\Quassel\\": "src/" }
+    },
+    "require": {
+    	"php": ">=5.3",
+        "react/event-loop": "~0.4.0|~0.3.0",
+        "react/socket-client": "~0.4.0|~0.3.0",
+        "react/dns": "~0.4.0|~0.3.0",
+        "react/promise": "~2.0|~1.0",
+        "clue/qdatastream": "~0.2.0"
+    },
+    "require-dev": {
+        "clue/block-react": "~0.1.0"
+    }
+}
