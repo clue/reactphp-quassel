@@ -19,7 +19,7 @@ class ProtocolTest extends TestCase
         $packet = $this->protocol->writeVariantList($in);
 		$reader = Reader::fromString($packet);
 
-        $this->assertEquals($in, $reader->readVariant());
+        $this->assertEquals($in, $reader->readQVariant());
     }
 
     public function testVariantMap()
@@ -29,7 +29,7 @@ class ProtocolTest extends TestCase
         $packet = $this->protocol->writeVariantMap($in);
 		$reader = Reader::fromString($packet);
 
-        $this->assertEquals($in, $reader->readVariant());
+        $this->assertEquals($in, $reader->readQVariant());
     }
 
     private function readDataFromPacket($packet)
