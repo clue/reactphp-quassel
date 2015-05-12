@@ -119,6 +119,15 @@ class Client extends EventEmitter
         )));
     }
 
+    public function sendHeartBeatRequest(\DateTime $dt)
+    {
+        // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_HEARTBEAT,
+            $dt
+        ), array(1 => Types::TYPE_QTIME)));
+    }
+
     public function sendHeartBeatReply(\DateTime $dt)
     {
         // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
