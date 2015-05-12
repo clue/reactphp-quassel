@@ -43,7 +43,7 @@ class Protocol
                 return $reader->readUInt();
             },
             'Identity' => function (Reader $reader) {
-                return $reader->readVariantMap();
+                return $reader->readQVariantMap();
             },
             'IdentityId' => function (Reader $reader) {
                 return $reader->readUInt();
@@ -54,12 +54,12 @@ class Protocol
                     'network' => $reader->readUInt(),
                     'type'    => $reader->readUShort(),
                     'group'   => $reader->readUInt(),
-                    'name'    => $reader->readByteArray(),
+                    'name'    => $reader->readQByteArray(),
                 );
             },
             // all required by "Network" InitRequest
             'Network::Server' => function (Reader $reader) {
-                return $reader->readVariantMap();
+                return $reader->readQVariantMap();
             },
             // unknown source?
             'BufferId' => function(Reader $reader) {
@@ -71,9 +71,9 @@ class Protocol
                     'timestamp'  => new \DateTime('@' . $reader->readUInt()),
                     'type'       => $reader->readUInt(),
                     'flags'      => $reader->readUChar(),
-                    'bufferInfo' => $reader->readUserTypeByName('BufferInfo'),
-                    'sender'     => $reader->readByteArray(),
-                    'content'    => $reader->readByteArray()
+                    'bufferInfo' => $reader->readQUserTypeByName('BufferInfo'),
+                    'sender'     => $reader->readQByteArray(),
+                    'content'    => $reader->readQByteArray()
                 );
             },
             'MsgId' => function (Reader $reader) {
@@ -85,8 +85,8 @@ class Protocol
     public function writeVariantList(array $list)
     {
         $writer = new Writer(null, $this->types);
-        $writer->writeType(Types::TYPE_VARIANT_LIST);
-        $writer->writeVariantList($list);
+        $writer->writeType(Types::TYPE_QVARIANT_LIST);
+        $writer->writeQVariantList($list);
 
         return (string)$writer;
     }
@@ -98,8 +98,8 @@ class Protocol
         // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
 
         $writer = new Writer(null, $this->types);
-        $writer->writeType(Types::TYPE_VARIANT_MAP);
-        $writer->writeVariantMap($map);
+        $writer->writeType(Types::TYPE_QVARIANT_MAP);
+        $writer->writeQVariantMap($map);
 
         return (string)$writer;
     }
@@ -121,6 +121,6 @@ class Protocol
     {
         $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
 
-        return $reader->readVariant();
+        return $reader->readQVariant();
     }
 }
