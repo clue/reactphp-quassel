@@ -9,6 +9,7 @@ use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
 use React\Promise\Deferred;
+use Clue\QDataStream\Types;
 
 class Client extends EventEmitter
 {
@@ -125,6 +126,97 @@ class Client extends EventEmitter
             Protocol::REQUEST_HEARTBEATREPLY,
             $dt
         )));
+    }
+
+    public function sendBufferInput($bufferInfo, $input)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_RPCCALL,
+            "2sendInput(BufferInfo,QString)",
+            $bufferInfo,
+            (string)$input
+        ), array(2 => 'BufferInfo')));
+    }
+
+    public function sendBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "BacklogManager",
+            "",
+            "requestBacklog",
+            (int)$bufferId,
+            (int)$messageIdFirst,
+            (int)$messageIdLast,
+            (int)$maxAmount,
+            0
+        ), array(4 => 'BufferId', 5 => 'MsgId', 6 => 'MsgId')));
+    }
+
+    public function sendBufferRequestRemove($bufferId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "BufferSyncer",
+            "",
+            "requestRemoveBuffer",
+            $bufferId
+        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId')));
+    }
+
+    public function sendBufferRequestMarkAsRead($bufferId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "BufferSyncer",
+            "",
+            "requestMarkBufferAsRead",
+            $bufferId
+        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId')));
+    }
+
+    public function sendBufferRequestSetLastSeenMessage($bufferId, $messageId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "BufferSyncer",
+            "",
+            "requestSetLastSeenMsg",
+            $bufferId,
+            $messageId
+        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId', 5 => 'MsgId')));
+    }
+
+    public function sendBufferRequestSetMarkerLine($bufferId, $messageId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "BufferSyncer",
+            "",
+            "requestSetMarkerLine",
+            $bufferId,
+            $messageId
+        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId', 5 => 'MsgId')));
+    }
+
+    public function sendNetworkRequestConnect($networkId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "Network",
+            (string)$networkId,
+            "requestConnect"
+        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
+    }
+
+    public function sendNetworkRequestDisconnect($networkId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "Network",
+            (string)$networkId,
+            "requestDisconnect"
+        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
     }
 
     public function close()

@@ -31,6 +31,7 @@ class Protocol
 
     private $binary;
     private $userTypeReader;
+    private $userTypeWriter;
 
     public function __construct(Binary $binary)
     {
@@ -80,13 +81,29 @@ class Protocol
                 return $reader->readUInt();
             }
         );
+
+        $this->userTypeWriter = array(
+            'BufferInfo' => function ($data, Writer $writer) {
+                $writer->writeUInt($data['id']);
+                $writer->writeUInt($data['network']);
+                $writer->writeUShort($data['type']);
+                $writer->writeUInt($data['group']);
+                $writer->writeQByteArray($data['name']);
+            },
+            'BufferId' => function ($data, Writer $writer) {
+                $writer->writeUInt($data);
+            },
+            'MsgId' => function ($data, Writer $writer) {
+                $writer->writeUInt($data);
+            }
+        );
     }
 
-    public function writeVariantList(array $list)
+    public function writeVariantList(array $list, $explicitTypes = array())
     {
-        $writer = new Writer(null, $this->types);
+        $writer = new Writer(null, $this->types, $this->userTypeWriter);
         $writer->writeType(Types::TYPE_QVARIANT_LIST);
-        $writer->writeQVariantList($list);
+        $writer->writeQVariantList($list, $explicitTypes);
 
         return (string)$writer;
     }
