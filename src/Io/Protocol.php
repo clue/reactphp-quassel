@@ -33,6 +33,11 @@ class Protocol
     private $userTypeReader;
     private $userTypeWriter;
 
+    public static function createFromProbe($probe)
+    {
+        return new Protocol(new Binary());
+    }
+
     public function __construct(Binary $binary)
     {
         $this->binary = $binary;
