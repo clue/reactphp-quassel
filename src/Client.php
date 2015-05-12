@@ -121,11 +121,11 @@ class Client extends EventEmitter
 
     public function sendHeartBeatReply(\DateTime $dt)
     {
-        // legacy protocol actually uses a QTime instead of QDateTime, but accepts both
+        // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
             $dt
-        )));
+        ), array(1 => Types::TYPE_QTIME)));
     }
 
     public function sendBufferInput($bufferInfo, $input)
