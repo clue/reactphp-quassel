@@ -132,9 +132,12 @@ class Protocol
 
     public function writeVariantMap(array $map)
     {
-        // TODO: datastream protocol uses UTF-8 keys..
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
+        if ($this->isDataStream()) {
+            // datastream protocol uses lists with UTF-8 keys
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
+
+            return $this->writeVariantList($this->mapToList($map));
+        }
 
         $writer = new Writer(null, $this->types);
         $writer->writeType(Types::TYPE_QVARIANT_MAP);
@@ -160,6 +163,37 @@ class Protocol
     {
         $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
 
-        return $reader->readQVariant();
+        $value = $reader->readQVariant();
+
+        if (isset($value[0]) && is_string($value[0]) && $this->isDataStream()) {
+            // datastream protocol uses lists with UTF-8 keys
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
+            // a list will always start with a request type
+            // if this is actually a map transported as a list, then the first key will always be a string
+            $value = $this->listToMap($value);
+        }
+
+        return $value;
+    }
+
+    public function mapToList($map)
+    {
+        $list = array();
+        foreach ($map as $key => $value) {
+            // explicitly pass key as UTF-8 byte array
+            // pass value with automatic type detection
+            $list []= new QVariant($key, Types::TYPE_QBYTE_ARRAY);
+            $list []= $value;
+        }
+        return $list;
+    }
+
+    public function listToMap($list)
+    {
+        $map = array();
+        for ($i = 0, $n = count($list); $i < $n; $i += 2) {
+            $map[$list[$i]] = $list[$i + 1];
+        }
+        return $map;
     }
 }
