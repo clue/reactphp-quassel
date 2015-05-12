@@ -32,10 +32,17 @@ class Protocol
     private $binary;
     private $userTypeReader;
     private $userTypeWriter;
+    private $legacy = true;
 
     public static function createFromProbe($probe)
     {
-        return new Protocol(new Binary());
+        $protocol = new Protocol(new Binary());
+
+        if ($probe & self::TYPE_DATASTREAM) {
+            $protocol->legacy = false;
+        }
+
+        return $protocol;
     }
 
     public function __construct(Binary $binary)
@@ -102,6 +109,16 @@ class Protocol
                 $writer->writeUInt($data);
             }
         );
+    }
+
+    public function isLegacy()
+    {
+        return $this->legacy;
+    }
+
+    public function isDataStream()
+    {
+        return !$this->legacy;
     }
 
     public function writeVariantList(array $list, $explicitTypes = array())
