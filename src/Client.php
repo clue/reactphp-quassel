@@ -46,22 +46,29 @@ class Client extends EventEmitter
      * ClientInitAck["Configured"] === false means you should continue with
      * sendCoreSetupData() next
      *
-     * @param boolean $compression
-     * @param boolean $ssl
+     * @param boolean $compression (only for legacy protocol)
+     * @param boolean $ssl         (only for legacy protocol)
      */
     public function sendClientInit($compression = false, $ssl = false)
     {
         // MMM dd yyyy HH:mm:ss
         $date = date('M d Y H:i:s');
 
-        $this->send($this->protocol->writeVariantMap(array(
+        $data = array(
             'MsgType' => 'ClientInit',
             'ClientDate' => $date,
-            'ClientVersion' => 'clue/quassel-react alpha',
-            'ProtocolVersion' => 10,
-            'UseCompression' => (bool)$compression,
-            'UseSsl' => (bool)$ssl
-        )));
+            'ClientVersion' => 'clue/quassel-react alpha'
+        );
+
+        if ($this->protocol->isLegacy()) {
+            $data += array(
+                'ProtocolVersion' => 10,
+                'UseCompression' => (bool)$compression,
+                'UseSsl' => (bool)$ssl
+            );
+        }
+
+        $this->send($this->protocol->writeVariantMap($data));
     }
 
     /**
@@ -122,19 +129,17 @@ class Client extends EventEmitter
 
     public function sendHeartBeatRequest(\DateTime $dt)
     {
-        // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, Types::TYPE_QTIME)
+            new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
         )));
     }
 
     public function sendHeartBeatReply(\DateTime $dt)
     {
-        // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
-            new QVariant($dt, Types::TYPE_QTIME)
+            new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
         )));
     }
 
