@@ -199,6 +199,26 @@ class Client extends EventEmitter
         ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId', 5 => 'MsgId')));
     }
 
+    public function sendNetworkRequestConnect($networkId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "Network",
+            (string)$networkId,
+            "requestConnect"
+        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
+    }
+
+    public function sendNetworkRequestDisconnect($networkId)
+    {
+        $this->send($this->protocol->writeVariantList(array(
+            Protocol::REQUEST_SYNC,
+            "Network",
+            (string)$networkId,
+            "requestDisconnect"
+        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
+    }
+
     public function close()
     {
         $this->stream->close();
