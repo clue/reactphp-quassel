@@ -5,6 +5,7 @@ use Clue\React\Quassel\Factory;
 use Clue\React\Block\Blocker;
 use Clue\React\Quassel\Client;
 use React\Promise\Deferred;
+use Clue\React\Quassel\Io\Protocol;
 
 class FunctionalTest extends TestCase
 {
@@ -122,6 +123,33 @@ class FunctionalTest extends TestCase
         $client->sendClientLogin(self::$username, self::$password);
 
         return self::$blocker->awaitOne($deferred->promise());
+    }
+
+    /**
+     * @depends testCreateClient
+     *
+     * @param Client $client
+     */
+    public function testSendHeartBeat(Client $client)
+    {
+        $time = new \DateTime();
+
+        $deferred = new Deferred();
+
+        $callback = function ($message) use ($deferred, &$callback, $client) {
+            if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                $client->removeListener('message', $callback);
+                $deferred->resolve($message[1]);
+            }
+        };
+
+        $client->on('message', $callback);
+
+        $client->sendHeartBeatRequest($time);
+
+        $received = self::$blocker->awaitOne($deferred->promise());
+
+        $this->assertEquals($time, $received);
     }
 
     /**
