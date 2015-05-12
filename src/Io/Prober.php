@@ -34,16 +34,16 @@ class Prober
 
         $stream->write($binary->writeUInt32($magic));
 
-        // list of supported protocol types
-        // last item has to be handled separately
-        //$types = array(Protocol::TYPE_DATASTREAM);
-        $types = array(Protocol::TYPE_LEGACY);
+        // list of supported protocol types (in order of preference)
+        $types = array(Protocol::TYPE_DATASTREAM, Protocol::TYPE_LEGACY);
+
+        // last item should get an END marker
         $last = array_pop($types);
+        $types []= $last | Protocol::TYPELIST_END;
 
         foreach ($types as $type) {
-            $stream->write($binary->writeUInt32($num));
+            $stream->write($binary->writeUInt32($type));
         }
-        $stream->write($binary->writeUInt32($last | Protocol::TYPELIST_END));
 
         $deferred = new Deferred(function ($resolve, $reject) use ($stream) {
             $reject(new \RuntimeException('Cancelled'));
