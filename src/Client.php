@@ -10,6 +10,7 @@ use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
 use React\Promise\Deferred;
 use Clue\QDataStream\Types;
+use Clue\QDataStream\QVariant;
 
 class Client extends EventEmitter
 {
@@ -124,8 +125,8 @@ class Client extends EventEmitter
         // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_HEARTBEAT,
-            $dt
-        ), array(1 => Types::TYPE_QTIME)));
+            new QVariant($dt, Types::TYPE_QTIME)
+        )));
     }
 
     public function sendHeartBeatReply(\DateTime $dt)
@@ -133,8 +134,8 @@ class Client extends EventEmitter
         // TODO: legacy protocol uses a QTime, datastream protocol QDateTime
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
-            $dt
-        ), array(1 => Types::TYPE_QTIME)));
+            new QVariant($dt, Types::TYPE_QTIME)
+        )));
     }
 
     public function sendBufferInput($bufferInfo, $input)
@@ -142,9 +143,9 @@ class Client extends EventEmitter
         $this->send($this->protocol->writeVariantList(array(
             Protocol::REQUEST_RPCCALL,
             "2sendInput(BufferInfo,QString)",
-            $bufferInfo,
+            new QVariant($bufferInfo, 'BufferInfo'),
             (string)$input
-        ), array(2 => 'BufferInfo')));
+        )));
     }
 
     public function sendBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
@@ -154,12 +155,12 @@ class Client extends EventEmitter
             "BacklogManager",
             "",
             "requestBacklog",
-            (int)$bufferId,
-            (int)$messageIdFirst,
-            (int)$messageIdLast,
+            new QVariant($bufferId, 'BufferId'),
+            new QVariant($messageIdFirst, 'MsgId'),
+            new QVariant($messageIdLast, 'MsgId'),
             (int)$maxAmount,
             0
-        ), array(4 => 'BufferId', 5 => 'MsgId', 6 => 'MsgId')));
+        )));
     }
 
     public function sendBufferRequestRemove($bufferId)
@@ -168,9 +169,9 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
-            "requestRemoveBuffer",
-            $bufferId
-        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId')));
+            new QVariant("requestRemoveBuffer", Types::TYPE_QBYTE_ARRAY),
+            new QVariant($bufferId, 'BufferId')
+        )));
     }
 
     public function sendBufferRequestMarkAsRead($bufferId)
@@ -179,9 +180,9 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
-            "requestMarkBufferAsRead",
-            $bufferId
-        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId')));
+            new QVariant("requestMarkBufferAsRead", Types::TYPE_QBYTE_ARRAY),
+            new QVariant($bufferId, 'BufferId')
+        )));
     }
 
     public function sendBufferRequestSetLastSeenMessage($bufferId, $messageId)
@@ -190,10 +191,10 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
-            "requestSetLastSeenMsg",
-            $bufferId,
-            $messageId
-        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId', 5 => 'MsgId')));
+            new QVariant("requestSetLastSeenMsg", Types::TYPE_QBYTE_ARRAY),
+            new QVariant($bufferId, 'BufferId'),
+            new QVariant($messageId, 'MsgId')
+        )));
     }
 
     public function sendBufferRequestSetMarkerLine($bufferId, $messageId)
@@ -202,10 +203,10 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
-            "requestSetMarkerLine",
-            $bufferId,
-            $messageId
-        ), array(3 => Types::TYPE_QBYTE_ARRAY, 4 => 'BufferId', 5 => 'MsgId')));
+            new QVariant("requestSetMarkerLine", Types::TYPE_QBYTE_ARRAY),
+            new QVariant($bufferId, 'BufferId'),
+            new QVariant($messageId, 'MsgId')
+        )));
     }
 
     public function sendNetworkRequestConnect($networkId)
@@ -214,8 +215,8 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
-            "requestConnect"
-        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
+            new QVariant("requestConnect", Types::TYPE_QBYTE_ARRAY)
+        )));
     }
 
     public function sendNetworkRequestDisconnect($networkId)
@@ -224,8 +225,8 @@ class Client extends EventEmitter
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
-            "requestDisconnect"
-        ), array(3 => Types::TYPE_QBYTE_ARRAY)));
+            new QVariant("requestDisconnect", Types::TYPE_QBYTE_ARRAY)
+        )));
     }
 
     public function close()
