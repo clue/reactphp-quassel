@@ -2,9 +2,9 @@
 
 use React\EventLoop\Factory as LoopFactory;
 use Clue\React\Quassel\Factory;
-use Clue\React\Block\Blocker;
+use Clue\React\Block;
 use Clue\React\Quassel\Client;
-use React\Promise\Deferred;
+use React\Promise\Promise;
 use Clue\React\Quassel\Io\Protocol;
 
 class FunctionalTest extends TestCase
@@ -34,7 +34,6 @@ class FunctionalTest extends TestCase
         }
 
         self::$loop = LoopFactory::create();
-        self::$blocker = new Blocker(self::$loop);
     }
 
     public function setUp()
@@ -49,7 +48,7 @@ class FunctionalTest extends TestCase
         $factory = new Factory(self::$loop);
         $promise = $factory->createClient(self::$host);
 
-        $client = self::$blocker->awaitOne($promise);
+        $client = Block\await($promise, self::$loop);
 
         return $client;
     }
@@ -115,20 +114,20 @@ class FunctionalTest extends TestCase
     {
         $time = new \DateTime();
 
-        $deferred = new Deferred();
+        $promise = new Promise(function ($resolve) use ($client) {
+            $callback = function ($message) use ($resolve, &$callback, $client) {
+                if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                    $client->removeListener('message', $callback);
+                    $resolve($message[1]);
+                }
+            };
 
-        $callback = function ($message) use ($deferred, &$callback, $client) {
-            if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
-                $client->removeListener('message', $callback);
-                $deferred->resolve($message[1]);
-            }
-        };
-
-        $client->on('message', $callback);
+            $client->on('message', $callback);
+        });
 
         $client->sendHeartBeatRequest($time);
 
-        $received = self::$blocker->awaitOne($deferred->promise());
+        $received = Block\await($promise, self::$loop);
 
         $this->assertEquals($time, $received);
     }
@@ -138,24 +137,22 @@ class FunctionalTest extends TestCase
      */
     public function testClose(Client $client)
     {
-        $deferred = new Deferred();
-        $client->once('close', function () use ($deferred) {
-            $deferred->resolve();
+        $promise = new Promise(function ($resolve) use ($client) {
+            $client->once('close', $resolve);
         });
 
         $client->close();
 
-        return self::$blocker->awaitOne($deferred->promise());
+        return Block\await($promise, self::$loop);
     }
 
     private function awaitMessage(Client $client)
     {
-        $deferred = new Deferred();
+        return Block\await(new Promise(function ($resolve, $reject) use ($client) {
+            $client->once('message', $resolve);
 
-        $client->once('message', array($deferred, 'resolve'));
-        $client->once('error', array($deferred, 'reject'));
-        $client->once('close', array($deferred, 'reject'));
-
-        return self::$blocker->awaitOne($deferred->promise());
+            $client->once('error', $reject);
+            $client->once('close', $reject);
+        }), self::$loop);
     }
 }
