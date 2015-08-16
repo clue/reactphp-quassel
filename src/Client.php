@@ -68,7 +68,7 @@ class Client extends EventEmitter
             );
         }
 
-        $this->send($this->protocol->writeVariantMap($data));
+        $this->sendMap($data);
     }
 
     /**
@@ -81,11 +81,11 @@ class Client extends EventEmitter
      */
     public function sendClientLogin($user, $password)
     {
-        $this->send($this->protocol->writeVariantMap(array(
+        $this->sendMap(array(
             'MsgType' => 'ClientLogin',
             'User' => (string)$user,
             'Password' => (string)$password
-        )));
+        ));
     }
 
     /**
@@ -107,7 +107,7 @@ class Client extends EventEmitter
      */
     public function sendCoreSetupData($user, $password, $backend = 'SQLite', $properties = array())
     {
-        $this->send($this->protocol->writeVariantMap(array(
+        $this->sendMap(array(
             'MsgType' => 'CoreSetupData',
             'SetupData' => array(
                 'AdminUser' => (string)$user,
@@ -115,47 +115,47 @@ class Client extends EventEmitter
                 'Backend' => (string)$backend,
                 'ConnectionProperties' => $properties
             )
-        )));
+        ));
     }
 
     public function sendInitRequest($class, $name)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_INITREQUEST,
             (string)$class,
             (string)$name
-        )));
+        ));
     }
 
     public function sendHeartBeatRequest(\DateTime $dt)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_HEARTBEAT,
             new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
-        )));
+        ));
     }
 
     public function sendHeartBeatReply(\DateTime $dt)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
             new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
-        )));
+        ));
     }
 
     public function sendBufferInput($bufferInfo, $input)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_RPCCALL,
             "2sendInput(BufferInfo,QString)",
             new QVariant($bufferInfo, 'BufferInfo'),
             (string)$input
-        )));
+        ));
     }
 
     public function sendBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "BacklogManager",
             "",
@@ -165,73 +165,73 @@ class Client extends EventEmitter
             new QVariant($messageIdLast, 'MsgId'),
             (int)$maxAmount,
             0
-        )));
+        ));
     }
 
     public function sendBufferRequestRemove($bufferId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
             new QVariant("requestRemoveBuffer", Types::TYPE_QBYTE_ARRAY),
             new QVariant($bufferId, 'BufferId')
-        )));
+        ));
     }
 
     public function sendBufferRequestMarkAsRead($bufferId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
             new QVariant("requestMarkBufferAsRead", Types::TYPE_QBYTE_ARRAY),
             new QVariant($bufferId, 'BufferId')
-        )));
+        ));
     }
 
     public function sendBufferRequestSetLastSeenMessage($bufferId, $messageId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
             new QVariant("requestSetLastSeenMsg", Types::TYPE_QBYTE_ARRAY),
             new QVariant($bufferId, 'BufferId'),
             new QVariant($messageId, 'MsgId')
-        )));
+        ));
     }
 
     public function sendBufferRequestSetMarkerLine($bufferId, $messageId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
             new QVariant("requestSetMarkerLine", Types::TYPE_QBYTE_ARRAY),
             new QVariant($bufferId, 'BufferId'),
             new QVariant($messageId, 'MsgId')
-        )));
+        ));
     }
 
     public function sendNetworkRequestConnect($networkId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
             new QVariant("requestConnect", Types::TYPE_QBYTE_ARRAY)
-        )));
+        ));
     }
 
     public function sendNetworkRequestDisconnect($networkId)
     {
-        $this->send($this->protocol->writeVariantList(array(
+        $this->sendList(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
             new QVariant("requestDisconnect", Types::TYPE_QBYTE_ARRAY)
-        )));
+        ));
     }
 
     public function close()
@@ -266,8 +266,17 @@ class Client extends EventEmitter
         $this->emit('close', array($this));
     }
 
-    private function send($data)
+    private function sendList($data)
     {
-        $this->stream->write($this->protocol->writePacket($data));
+        $this->stream->write($this->protocol->writePacket(
+            $this->protocol->writeVariantList($data)
+        ));
+    }
+
+    private function sendMap($data)
+    {
+        $this->stream->write($this->protocol->writePacket(
+            $this->protocol->writeVariantMap($data)
+        ));
     }
 }
