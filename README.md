@@ -50,6 +50,15 @@ $factory->createClient('localhost')->then(
 
 The `$uri` parameter must be a valid URI which must contain a host part and can optionally contain a port.
 
+This method defauls to probing the Quassel IRC core for the correct protocol to
+use (newer "datastream" protocol or original "legacy" protocol).
+If you have trouble with the newer "datastream" protocol, you can force using
+the old "legacy" protocol by prefixing the `legacy` scheme identifier like this:
+
+```php
+$factory->createClient('legacy://quassel.example.com:1234');
+```
+
 ### Client
 
 The `Client` is responsible for exchanging messages with your Quassel IRC core
