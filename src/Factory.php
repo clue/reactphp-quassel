@@ -9,6 +9,7 @@ use Clue\React\Quassel\Io\Prober;
 use React\EventLoop\LoopInterface;
 use React\Dns\Resolver\Factory as ResolverFactory;
 use React\SocketClient\Connector;
+use Clue\React\Quassel\Io\Protocol;
 
 class Factory
 {
@@ -62,9 +63,8 @@ class Factory
                         throw $e;
                     }
                 )->then(
-                    function (Stream $stream) use ($probe) {
-                        // TODO: ignore $probe value for now, should check for protocol, compression and SSL
-                        return new Client($stream);
+                    function (Stream $stream) use (&$probe) {
+                        return new Client($stream, Protocol::createFromProbe($probe));
                     }
                 );
             }

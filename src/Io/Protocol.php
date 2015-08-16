@@ -5,6 +5,7 @@ namespace Clue\React\Quassel\Io;
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\Reader;
+use Clue\QDataStream\QVariant;
 
 class Protocol
 {
@@ -32,6 +33,18 @@ class Protocol
     private $binary;
     private $userTypeReader;
     private $userTypeWriter;
+    private $legacy = true;
+
+    public static function createFromProbe($probe)
+    {
+        $protocol = new Protocol(new Binary());
+
+        if ($probe & self::TYPE_DATASTREAM) {
+            $protocol->legacy = false;
+        }
+
+        return $protocol;
+    }
 
     public function __construct(Binary $binary)
     {
@@ -99,24 +112,39 @@ class Protocol
         );
     }
 
+    public function isLegacy()
+    {
+        return $this->legacy;
+    }
+
+    public function isDataStream()
+    {
+        return !$this->legacy;
+    }
+
     public function writeVariantList(array $list, $explicitTypes = array())
     {
         $writer = new Writer(null, $this->types, $this->userTypeWriter);
-        $writer->writeType(Types::TYPE_QVARIANT_LIST);
-        $writer->writeQVariantList($list, $explicitTypes);
+        if ($this->isLegacy()) {
+            $writer->writeQVariant($list);
+        } else {
+            $writer->writeQVariantList($list);
+        }
 
         return (string)$writer;
     }
 
     public function writeVariantMap(array $map)
     {
-        // TODO: datastream protocol uses UTF-8 keys..
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
+        if ($this->isDataStream()) {
+            // datastream protocol uses lists with UTF-8 keys
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
+
+            return $this->writeVariantList($this->mapToList($map));
+        }
 
         $writer = new Writer(null, $this->types);
-        $writer->writeType(Types::TYPE_QVARIANT_MAP);
-        $writer->writeQVariantMap($map);
+        $writer->writeQVariant($map);
 
         return (string)$writer;
     }
@@ -138,6 +166,46 @@ class Protocol
     {
         $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
 
-        return $reader->readQVariant();
+        if ($this->isLegacy()) {
+            return $reader->readQVariant();
+        }
+
+        $value = $reader->readQVariantList();
+
+        if (is_string($value[0])) {
+            // datastream protocol uses lists with UTF-8 keys
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
+            // a list will always start with a request type
+            // if this is actually a map transported as a list, then the first key will always be a string
+            return $this->listToMap($value);
+        }
+
+        if ($value[0] === self::REQUEST_INITDATA) {
+            // first 3 elements are unchanged, everything else should be a map
+            return array_slice($value, 0, 3) + $this->listToMap(array_slice($value, 3));
+        }
+
+        return $value;
+    }
+
+    public function mapToList($map)
+    {
+        $list = array();
+        foreach ($map as $key => $value) {
+            // explicitly pass key as UTF-8 byte array
+            // pass value with automatic type detection
+            $list []= new QVariant($key, Types::TYPE_QBYTE_ARRAY);
+            $list []= $value;
+        }
+        return $list;
+    }
+
+    public function listToMap($list)
+    {
+        $map = array();
+        for ($i = 0, $n = count($list); $i < $n; $i += 2) {
+            $map[$list[$i]] = $list[$i + 1];
+        }
+        return $map;
     }
 }
