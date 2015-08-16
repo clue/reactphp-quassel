@@ -60,19 +60,12 @@ class FunctionalTest extends TestCase
      */
     public function testSendClientInit(Client $client)
     {
-        $deferred = new Deferred();
-
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'ClientInitAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendClientInit();
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('ClientInitAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -88,18 +81,12 @@ class FunctionalTest extends TestCase
             $this->markTestSkipped('Given core already configured, can not set-up');
         }
 
-        $deferred = new Deferred();
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'CoreSetupAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendCoreSetupData(self::$username, self::$password);
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('CoreSetupAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -111,18 +98,12 @@ class FunctionalTest extends TestCase
      */
     public function testSendClientLogin(Client $client, $message)
     {
-        $deferred = new Deferred();
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'ClientLoginAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendClientLogin(self::$username, self::$password);
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('ClientLoginAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -163,6 +144,17 @@ class FunctionalTest extends TestCase
         });
 
         $client->close();
+
+        return self::$blocker->awaitOne($deferred->promise());
+    }
+
+    private function awaitMessage(Client $client)
+    {
+        $deferred = new Deferred();
+
+        $client->once('message', array($deferred, 'resolve'));
+        $client->once('error', array($deferred, 'reject'));
+        $client->once('close', array($deferred, 'reject'));
 
         return self::$blocker->awaitOne($deferred->promise());
     }
