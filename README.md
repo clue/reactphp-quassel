@@ -1,6 +1,15 @@
 # clue/quassel-react [![Build Status](https://travis-ci.org/clue/php-quassel-react.svg?branch=master)](https://travis-ci.org/clue/php-quassel-react)
 
+Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
+built on top of [React PHP](http://reactphp.org/).
+
+This is a low-level networking library which can be used to communicate with your Quassel IRC core.
+
 > Note: This project is in beta stage! Feel free to report any issues you encounter.
+
+## Quickstart example
+
+See also the [examples](examples).
 
 ## Install
 
