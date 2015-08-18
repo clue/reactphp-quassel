@@ -21,7 +21,7 @@ class Client extends EventEmitter
     public function __construct(Stream $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
-            $protocol = new Protocol(new Binary());
+            $protocol = Protocol::createFromProbe(0);;
         }
         if ($splitter === null) {
             $splitter = new PacketSplitter(new Binary());

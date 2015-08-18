@@ -5,9 +5,8 @@ namespace Clue\React\Quassel\Io;
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\Reader;
-use Clue\QDataStream\QVariant;
 
-class Protocol
+abstract class Protocol
 {
     // https://github.com/quassel/quassel/blob/8e2f578b3d83d2dd7b6f2ea64d350693073ffed1/src/common/protocol.h#L30
     const MAGIC = 0x42b33f00;
@@ -30,20 +29,18 @@ class Protocol
     const REQUEST_HEARTBEAT = 5;
     const REQUEST_HEARTBEATREPLY = 6;
 
-    private $binary;
-    private $userTypeReader;
-    private $userTypeWriter;
-    private $legacy = true;
+    protected $binary;
+    protected $types;
+    protected $userTypeReader;
+    protected $userTypeWriter;
 
     public static function createFromProbe($probe)
     {
-        $protocol = new Protocol(new Binary());
-
         if ($probe & self::TYPE_DATASTREAM) {
-            $protocol->legacy = false;
+            return new DatastreamProtocol(new Binary());
+        } else {
+            return new LegacyProtocol(new Binary());
         }
-
-        return $protocol;
     }
 
     public function __construct(Binary $binary)
@@ -117,10 +114,7 @@ class Protocol
      *
      * @return boolean
      */
-    public function isLegacy()
-    {
-        return $this->legacy;
-    }
+    abstract public function isLegacy();
 
     /**
      * encode the given list of values
@@ -128,20 +122,7 @@ class Protocol
      * @param mixed[]|array<mixed> $list
      * @return string binary packet contents
      */
-    public function writeVariantList(array $list)
-    {
-        $writer = new Writer(null, $this->types, $this->userTypeWriter);
-
-        if ($this->isLegacy()) {
-            // legacy protocols prefixes list with type information
-            $writer->writeQVariant($list);
-        } else {
-            // datastream protocol just uses list contents
-            $writer->writeQVariantList($list);
-        }
-
-        return (string)$writer;
-    }
+    abstract public function writeVariantList(array $list);
 
     /**
      * encode the given map of key/value-pairs
@@ -149,22 +130,7 @@ class Protocol
      * @param mixed[]|array<mixed> $map
      * @return string binary packet contents
      */
-    public function writeVariantMap(array $map)
-    {
-        $writer = new Writer(null, $this->types);
-
-        if ($this->isLegacy()) {
-            // legacy protocol prefixes map with type information
-            $writer->writeQVariant($map);
-        } else {
-            // datastream protocol just uses list contents with UTF-8 keys
-            // the list always starts with a key string, which can be used to tell apart from actual list contents
-            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
-            $writer->writeQVariantList($this->mapToList($map));
-        }
-
-        return (string)$writer;
-    }
+    abstract public function writeVariantMap(array $map);
 
     /**
      * encode the given packet data to include framing (packet length)
@@ -191,66 +157,5 @@ class Protocol
      * @param string $packet bianry packet contents
      * @return mixed[]|array<mixed> list of values or map of key/value-pairs
      */
-    public function readVariant($packet)
-    {
-        $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
-
-        if ($this->isLegacy()) {
-            // legacy protcol always uses type prefix, so just read as variant
-            return $reader->readQVariant();
-        }
-
-        // datastrema protocol always uses list contents (even for maps)
-        $value = $reader->readQVariantList();
-
-        // if the first element is a string, then this is actually a map transported as a list
-        // actual lists will always start with an integer request type
-        if (is_string($value[0])) {
-            // datastream protocol uses lists with UTF-8 keys
-            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
-            return $this->listToMap($value);
-        }
-
-        if ($value[0] === self::REQUEST_INITDATA) {
-            // first 3 elements are unchanged, everything else should be a map
-            return array_slice($value, 0, 3) + $this->listToMap(array_slice($value, 3));
-        }
-
-        return $value;
-    }
-
-    /**
-     * converts the given map to a list
-     *
-     * @param mixed[]|array<mixed> $map
-     * @return mixed[]|array<mixed>
-     * @internal
-     */
-    public function mapToList($map)
-    {
-        $list = array();
-        foreach ($map as $key => $value) {
-            // explicitly pass key as UTF-8 byte array
-            // pass value with automatic type detection
-            $list []= new QVariant($key, Types::TYPE_QBYTE_ARRAY);
-            $list []= $value;
-        }
-        return $list;
-    }
-
-    /**
-     * converts the given list to a map
-     *
-     * @param mixed[]|array<mixed> $list
-     * @return mixed[]|array<mixed>
-     * @internal
-     */
-    public function listToMap($list)
-    {
-        $map = array();
-        for ($i = 0, $n = count($list); $i < $n; $i += 2) {
-            $map[$list[$i]] = $list[$i + 1];
-        }
-        return $map;
-    }
+    abstract public function readVariant($packet);
 }

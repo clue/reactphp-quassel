@@ -1,0 +1,42 @@
+<?php
+
+namespace Clue\React\Quassel\Io;
+
+use Clue\QDataStream\Writer;
+use Clue\QDataStream\Reader;
+
+class LegacyProtocol extends Protocol
+{
+    public function isLegacy()
+    {
+        return true;
+    }
+
+    public function writeVariantList(array $list)
+    {
+        $writer = new Writer(null, $this->types, $this->userTypeWriter);
+
+        // legacy protocols prefixes list with type information
+        $writer->writeQVariant($list);
+
+        return (string)$writer;
+    }
+
+    public function writeVariantMap(array $map)
+    {
+        $writer = new Writer(null, $this->types);
+
+        // legacy protocol prefixes map with type information
+        $writer->writeQVariant($map);
+
+        return (string)$writer;
+    }
+
+    public function readVariant($packet)
+    {
+        $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
+
+        // legacy protcol always uses type prefix, so just read as variant
+        return $reader->readQVariant();
+    }
+}

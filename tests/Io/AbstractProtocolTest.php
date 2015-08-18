@@ -5,21 +5,17 @@ use Clue\React\Quassel\Io\Binary;
 use Clue\React\Quassel\Io\PacketParser;
 use Clue\QDataStream\Reader;
 
-class ProtocolTest extends TestCase
+abstract class AbstractProtocolTest extends TestCase
 {
-    public function setUp()
-    {
-        $this->protocol = new Protocol(new Binary());
-    }
+    protected $protocol;
 
     public function testVariantList()
     {
-        $in = array('first', 'second', 10, false);
+        $in = array(1, 'first', 'second', 10, false);
 
         $packet = $this->protocol->writeVariantList($in);
-		$reader = Reader::fromString($packet);
 
-        $this->assertEquals($in, $reader->readQVariant());
+        $this->assertEquals($in, $this->protocol->readVariant($packet));
     }
 
     public function testVariantMap()
@@ -27,9 +23,8 @@ class ProtocolTest extends TestCase
         $in = array('hello' => 'world', 'number' => 10, 'boolean' => true);
 
         $packet = $this->protocol->writeVariantMap($in);
-		$reader = Reader::fromString($packet);
 
-        $this->assertEquals($in, $reader->readQVariant());
+        $this->assertEquals($in, $this->protocol->readVariant($packet));
     }
 
     private function readDataFromPacket($packet)
