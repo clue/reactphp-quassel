@@ -240,24 +240,20 @@ class Client extends EventEmitter
     }
 
     /** @internal */
-    public function handleData($data)
+    public function handleData($chunk)
     {
-        //var_dump('received ' . strlen($data) . ' bytes');
-        //$h = new Hexdump();
-        //echo $h->dump($data);
-
         // chunk of packet data received
         // feed chunk to splitter, which will invoke a callable for each complete packet
-        $this->splitter->push($data, array($this, 'handlePacket'));
+        $this->splitter->push($chunk, array($this, 'handlePacket'));
     }
 
     /** @internal */
-    public function handlePacket($data)
+    public function handlePacket($packet)
     {
         // complete packet data received
         // read variant from packet data and forward as message
-        $variant = $this->protocol->readVariant($data);
-        $this->emit('message', array($variant, $this));
+        $data = $this->protocol->readVariant($packet);
+        $this->emit('message', array($data, $this));
     }
 
     /** @internal */

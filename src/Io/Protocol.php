@@ -112,43 +112,66 @@ class Protocol
         );
     }
 
+    /**
+     * Returns whether this instance encode/decodes for the old legacy protcol
+     *
+     * @return boolean
+     */
     public function isLegacy()
     {
         return $this->legacy;
     }
 
-    public function isDataStream()
-    {
-        return !$this->legacy;
-    }
-
-    public function writeVariantList(array $list, $explicitTypes = array())
+    /**
+     * encode the given list of values
+     *
+     * @param mixed[]|array<mixed> $list
+     * @return string binary packet contents
+     */
+    public function writeVariantList(array $list)
     {
         $writer = new Writer(null, $this->types, $this->userTypeWriter);
+
         if ($this->isLegacy()) {
+            // legacy protocols prefixes list with type information
             $writer->writeQVariant($list);
         } else {
+            // datastream protocol just uses list contents
             $writer->writeQVariantList($list);
         }
 
         return (string)$writer;
     }
 
+    /**
+     * encode the given map of key/value-pairs
+     *
+     * @param mixed[]|array<mixed> $map
+     * @return string binary packet contents
+     */
     public function writeVariantMap(array $map)
     {
-        if ($this->isDataStream()) {
-            // datastream protocol uses lists with UTF-8 keys
-            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
-
-            return $this->writeVariantList($this->mapToList($map));
-        }
-
         $writer = new Writer(null, $this->types);
-        $writer->writeQVariant($map);
+
+        if ($this->isLegacy()) {
+            // legacy protocol prefixes map with type information
+            $writer->writeQVariant($map);
+        } else {
+            // datastream protocol just uses list contents with UTF-8 keys
+            // the list always starts with a key string, which can be used to tell apart from actual list contents
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
+            $writer->writeQVariantList($this->mapToList($map));
+        }
 
         return (string)$writer;
     }
 
+    /**
+     * encode the given packet data to include framing (packet length)
+     *
+     * @param string $packet binary packet contents
+     * @return string binary packet contents prefixed with frame length
+     */
     public function writePacket($packet)
     {
         // TODO: legacy compression / decompression
@@ -162,21 +185,29 @@ class Protocol
         return $this->binary->writeUInt32(strlen($packet)) . $packet;
     }
 
+    /**
+     * decodes the given packet contents and returns its representation in PHP
+     *
+     * @param string $packet bianry packet contents
+     * @return mixed[]|array<mixed> list of values or map of key/value-pairs
+     */
     public function readVariant($packet)
     {
         $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
 
         if ($this->isLegacy()) {
+            // legacy protcol always uses type prefix, so just read as variant
             return $reader->readQVariant();
         }
 
+        // datastrema protocol always uses list contents (even for maps)
         $value = $reader->readQVariantList();
 
+        // if the first element is a string, then this is actually a map transported as a list
+        // actual lists will always start with an integer request type
         if (is_string($value[0])) {
             // datastream protocol uses lists with UTF-8 keys
             // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
-            // a list will always start with a request type
-            // if this is actually a map transported as a list, then the first key will always be a string
             return $this->listToMap($value);
         }
 
@@ -188,6 +219,13 @@ class Protocol
         return $value;
     }
 
+    /**
+     * converts the given map to a list
+     *
+     * @param mixed[]|array<mixed> $map
+     * @return mixed[]|array<mixed>
+     * @internal
+     */
     public function mapToList($map)
     {
         $list = array();
@@ -200,6 +238,13 @@ class Protocol
         return $list;
     }
 
+    /**
+     * converts the given list to a map
+     *
+     * @param mixed[]|array<mixed> $list
+     * @return mixed[]|array<mixed>
+     * @internal
+     */
     public function listToMap($list)
     {
         $map = array();
