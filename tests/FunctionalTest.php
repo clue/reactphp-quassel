@@ -2,9 +2,9 @@
 
 use React\EventLoop\Factory as LoopFactory;
 use Clue\React\Quassel\Factory;
-use Clue\React\Block\Blocker;
+use Clue\React\Block;
 use Clue\React\Quassel\Client;
-use React\Promise\Deferred;
+use React\Promise\Promise;
 use Clue\React\Quassel\Io\Protocol;
 
 class FunctionalTest extends TestCase
@@ -34,7 +34,6 @@ class FunctionalTest extends TestCase
         }
 
         self::$loop = LoopFactory::create();
-        self::$blocker = new Blocker(self::$loop);
     }
 
     public function setUp()
@@ -49,7 +48,7 @@ class FunctionalTest extends TestCase
         $factory = new Factory(self::$loop);
         $promise = $factory->createClient(self::$host);
 
-        $client = self::$blocker->awaitOne($promise);
+        $client = Block\await($promise, self::$loop);
 
         return $client;
     }
@@ -60,19 +59,12 @@ class FunctionalTest extends TestCase
      */
     public function testSendClientInit(Client $client)
     {
-        $deferred = new Deferred();
-
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'ClientInitAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendClientInit();
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('ClientInitAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -88,18 +80,12 @@ class FunctionalTest extends TestCase
             $this->markTestSkipped('Given core already configured, can not set-up');
         }
 
-        $deferred = new Deferred();
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'CoreSetupAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendCoreSetupData(self::$username, self::$password);
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('CoreSetupAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -111,18 +97,12 @@ class FunctionalTest extends TestCase
      */
     public function testSendClientLogin(Client $client, $message)
     {
-        $deferred = new Deferred();
-        $client->once('message', function ($message) use ($deferred) {
-            if (isset($message['MsgType']) && $message['MsgType'] === 'ClientLoginAck') {
-                $deferred->resolve($message);
-            } else {
-                $deferred->reject($message);
-            }
-        });
-
         $client->sendClientLogin(self::$username, self::$password);
 
-        return self::$blocker->awaitOne($deferred->promise());
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('ClientLoginAck', $message['MsgType']);
+
+        return $message;
     }
 
     /**
@@ -134,20 +114,20 @@ class FunctionalTest extends TestCase
     {
         $time = new \DateTime();
 
-        $deferred = new Deferred();
+        $promise = new Promise(function ($resolve) use ($client) {
+            $callback = function ($message) use ($resolve, &$callback, $client) {
+                if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                    $client->removeListener('message', $callback);
+                    $resolve($message[1]);
+                }
+            };
 
-        $callback = function ($message) use ($deferred, &$callback, $client) {
-            if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
-                $client->removeListener('message', $callback);
-                $deferred->resolve($message[1]);
-            }
-        };
-
-        $client->on('message', $callback);
+            $client->on('message', $callback);
+        });
 
         $client->sendHeartBeatRequest($time);
 
-        $received = self::$blocker->awaitOne($deferred->promise());
+        $received = Block\await($promise, self::$loop);
 
         $this->assertEquals($time, $received);
     }
@@ -157,13 +137,22 @@ class FunctionalTest extends TestCase
      */
     public function testClose(Client $client)
     {
-        $deferred = new Deferred();
-        $client->once('close', function () use ($deferred) {
-            $deferred->resolve();
+        $promise = new Promise(function ($resolve) use ($client) {
+            $client->once('close', $resolve);
         });
 
         $client->close();
 
-        return self::$blocker->awaitOne($deferred->promise());
+        return Block\await($promise, self::$loop);
+    }
+
+    private function awaitMessage(Client $client)
+    {
+        return Block\await(new Promise(function ($resolve, $reject) use ($client) {
+            $client->once('message', $resolve);
+
+            $client->once('error', $reject);
+            $client->once('close', $reject);
+        }), self::$loop);
     }
 }
