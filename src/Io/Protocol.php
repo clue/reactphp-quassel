@@ -133,25 +133,6 @@ abstract class Protocol
     abstract public function writeVariantMap(array $map);
 
     /**
-     * encode the given packet data to include framing (packet length)
-     *
-     * @param string $packet binary packet contents
-     * @return string binary packet contents prefixed with frame length
-     */
-    public function writePacket($packet)
-    {
-        // TODO: legacy compression / decompression
-        // legacy protocol writes variant via DataStream to ByteArray
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/legacy/legacypeer.cpp#L105
-        // https://github.com/quassel/quassel/blob/master/src/common/protocols/legacy/legacypeer.cpp#L63
-        //$data = $this->types->writeByteArray($data);
-
-        // raw data is prefixed with length, then written
-        // https://github.com/quassel/quassel/blob/master/src/common/remotepeer.cpp#L241
-        return $this->binary->writeUInt32(strlen($packet)) . $packet;
-    }
-
-    /**
      * decodes the given packet contents and returns its representation in PHP
      *
      * @param string $packet bianry packet contents

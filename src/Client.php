@@ -264,14 +264,14 @@ class Client extends EventEmitter
 
     private function sendList($data)
     {
-        $this->stream->write($this->protocol->writePacket(
+        $this->stream->write($this->splitter->writePacket(
             $this->protocol->writeVariantList($data)
         ));
     }
 
     private function sendMap($data)
     {
-        $this->stream->write($this->protocol->writePacket(
+        $this->stream->write($this->splitter->writePacket(
             $this->protocol->writeVariantMap($data)
         ));
     }

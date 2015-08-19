@@ -44,7 +44,7 @@ class ClientTest extends TestCase
     private function expectSendMap()
     {
         $this->protocol->expects($this->once())->method('writeVariantMap');
-        $this->protocol->expects($this->once())->method('writePacket');
+        $this->splitter->expects($this->once())->method('writePacket');
         $this->stream->expects($this->once())->method('write');
     }
 }
