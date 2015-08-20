@@ -10,6 +10,8 @@ use React\EventLoop\LoopInterface;
 use React\Dns\Resolver\Factory as ResolverFactory;
 use React\SocketClient\Connector;
 use Clue\React\Quassel\Io\Protocol;
+use React\Promise;
+use InvalidArgumentException;
 
 class Factory
 {
@@ -31,23 +33,34 @@ class Factory
     public function createClient($address)
     {
         if (strpos($address, '://') === false) {
-            $address = 'dummy://' . $address;
+            $address = 'tcp://' . $address;
         }
         $parts = parse_url($address);
         if (!$parts || !isset($parts['host'])) {
-            return;
+            return Promise\reject(new InvalidArgumentException('Given argument "' . $address . '" is not a valid URI'));
         }
         if (!isset($parts['port'])) {
             $parts['port'] = 4242;
         }
 
-        $connector = $this->connector;
-        $prober = $this->prober;
+        // default to automatic probing protocol unless scheme is explicitly given
+        $probe = 0;
+        if (isset($parts['scheme'])) {
+            if ($parts['scheme'] === 'legacy') {
+                $probe = Protocol::TYPE_LEGACY;
+            } elseif ($parts['scheme'] !== 'tcp') {
+                return Promise\reject(new InvalidArgumentException('Given URI scheme "' . $parts['scheme'] . '" is invalid'));
+            }
+        }
 
-        return $connector->create($parts['host'], $parts['port'])->then(
-            function (Stream $stream) use ($prober, $connector, $parts) {
-                $probe = 0;
+        $promise = $this->connector->create($parts['host'], $parts['port']);
 
+        // protocol probe not already set
+        if ($probe === 0) {
+            $connector = $this->connector;
+            $prober = $this->prober;
+
+            $promise = $promise->then(function (Stream $stream) use ($prober, &$probe, $connector, $parts) {
                 return $prober->probe($stream)->then(
                     function ($ret) use (&$probe, $stream) {
                         // probe returned successfully, create new client for this stream
@@ -56,17 +69,21 @@ class Factory
                         return $stream;
                     },
                     function ($e) use ($connector, $parts) {
+                        // probing failed
                         if ($e->getCode() === Prober::ERROR_CLOSED) {
                             // legacy servers will terminate connection while probing
+                            // let's just open a new connection and assume default probe
                             return $connector->create($parts['host'], $parts['port']);
                         }
                         throw $e;
                     }
-                )->then(
-                    function (Stream $stream) use (&$probe) {
-                        return new Client($stream, Protocol::createFromProbe($probe));
-                    }
                 );
+            });
+        }
+
+        return $promise->then(
+            function (Stream $stream) use (&$probe) {
+                return new Client($stream, Protocol::createFromProbe($probe));
             }
         );
     }
