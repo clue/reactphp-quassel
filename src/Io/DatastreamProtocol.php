@@ -6,6 +6,7 @@ use Clue\QDataStream\Writer;
 use Clue\QDataStream\Reader;
 use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
+use InvalidArgumentException;
 
 class DatastreamProtocol extends Protocol
 {
@@ -16,6 +17,10 @@ class DatastreamProtocol extends Protocol
 
     public function writeVariantList(array $list)
     {
+        if (isset($list[0]) && !is_integer($list[0])) {
+            throw new InvalidArgumentException('List MUST start with an integer value in order to distinguish from map encoding');
+        }
+
         $writer = new Writer(null, $this->types, $this->userTypeWriter);
 
         // datastream protocol just uses list contents
@@ -52,8 +57,10 @@ class DatastreamProtocol extends Protocol
         }
 
         if ($value[0] === self::REQUEST_INITDATA) {
+            // make sure InitData is in line with legacy protocol wire format
             // first 3 elements are unchanged, everything else should be a map
-            return array_slice($value, 0, 3) + $this->listToMap(array_slice($value, 3));
+            // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L383
+            return array_slice($value, 0, 3) + array(3 => $this->listToMap(array_slice($value, 3)));
         }
 
         return $value;
