@@ -20,4 +20,4 @@ install:
 script:
   - sudo /etc/init.d/quasselcore status || sudo /etc/init.d/quasselcore start
   - sudo /etc/init.d/quasselcore status || sleep 2
-  - phpunit --coverage-text
+  - vendor/bin/phpunit --coverage-text
