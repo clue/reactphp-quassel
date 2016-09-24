@@ -1,6 +1,9 @@
 <?php
 
 use Clue\React\Quassel\Client;
+use Clue\React\Quassel\Io\Protocol;
+use Clue\QDataStream\QVariant;
+use Clue\QDataStream\Types;
 class ClientTest extends TestCase
 {
     public function setUp()
@@ -39,6 +42,41 @@ class ClientTest extends TestCase
     {
         $this->expectSendMap();
         $this->client->sendCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
+    }
+
+    public function testSendHeartBeatRequest()
+    {
+        $dt = new \DateTime();
+
+        $this->client->sendHeartBeatRequest($dt);
+    }
+
+    public function testSendHeartBeatReplyLegacyAsQTime()
+    {
+        $dt = new \DateTime();
+
+        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(true);
+        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
+            Protocol::REQUEST_HEARTBEAT,
+            new QVariant($dt, Types::TYPE_QTIME)
+        ));
+        $this->splitter->expects($this->once())->method('writePacket');
+
+        $this->client->sendHeartBeatRequest($dt);
+    }
+
+    public function testSendHeartBeatReplyNonLegacyAsQDateTime()
+    {
+        $dt = new \DateTime();
+
+        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(false);
+        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
+            Protocol::REQUEST_HEARTBEAT,
+            new QVariant($dt, Types::TYPE_QDATETIME)
+        ));
+        $this->splitter->expects($this->once())->method('writePacket');
+
+        $this->client->sendHeartBeatRequest($dt);
     }
 
     private function expectSendMap()
