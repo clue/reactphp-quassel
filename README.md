@@ -113,15 +113,16 @@ The `close()` method can be used to force-close the Quassel connection immediate
 
 ## Install
 
-The recommended way to install this library is [through composer](http://getcomposer.org). [New to composer?](http://getcomposer.org/doc/00-intro.md)
+The recommended way to install this library is [through Composer](http://getcomposer.org).
+[New to Composer?](http://getcomposer.org/doc/00-intro.md)
 
-```JSON
-{
-    "require": {
-        "clue/quassel-react": "~0.3.0"
-    }
-}
+This will install the latest supported version:
+
+```bash
+$ composer require clue/quassel-react: ^0.3.1
 ```
+
+See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.
 
 ## Tests
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1 (2016-09-24)
+
+*   Feature: Support SocketClient v0.5 (while keeping BC)
+    (#18 by @clue)
+
+*   Maintenance: First class support for PHP 5.3 through PHP 7 and HHVM
+    (#19 by @clue)
+
 ## 0.3.0 (2015-08-20)
 
 *   Feature: Support newer "datastream" protocol
