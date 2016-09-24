@@ -26,12 +26,12 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
     var_dump('CONNECTED');
 
     if ($debug) {
-        $client->on('message', function ($message) {
+        $client->on('data', function ($message) {
             var_dump($message);
         });
     }
 
-    $client->on('message', function ($message) use ($client, $user) {
+    $client->on('data', function ($message) use ($client, $user) {
         $type = null;
         if (is_array($message) && isset($message['MsgType'])) {
             $type = $message['MsgType'];

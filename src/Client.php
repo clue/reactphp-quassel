@@ -3,16 +3,17 @@
 namespace Clue\React\Quassel;
 
 use React\Stream\Stream;
-use Clue\Hexdump\Hexdump;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
-use React\Promise\Deferred;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
+use React\Stream\ReadableStreamInterface;
+use React\Stream\WritableStreamInterface;
+use React\Stream\Util;
 
-class Client extends EventEmitter
+class Client extends EventEmitter implements ReadableStreamInterface
 {
     private $stream;
     private $protocol;
@@ -239,6 +240,28 @@ class Client extends EventEmitter
         $this->stream->close();
     }
 
+    public function isReadable()
+    {
+        return $this->stream->isReadable();
+    }
+
+    public function pipe(WritableStreamInterface $dest, array $options = array())
+    {
+        Util::pipe($this, $dest, $options);
+
+        return $dest;
+    }
+
+    public function pause()
+    {
+        $this->stream->pause();
+    }
+
+    public function resume()
+    {
+        $this->stream->resume();
+    }
+
     /** @internal */
     public function handleData($chunk)
     {
@@ -253,13 +276,13 @@ class Client extends EventEmitter
         // complete packet data received
         // read variant from packet data and forward as message
         $data = $this->protocol->readVariant($packet);
-        $this->emit('message', array($data, $this));
+        $this->emit('data', array($data));
     }
 
     /** @internal */
     public function handleClose()
     {
-        $this->emit('close', array($this));
+        $this->emit('close');
     }
 
     private function sendList($data)

@@ -26,6 +26,31 @@ class ClientTest extends TestCase
         $this->client->close();
     }
 
+    public function testIsReadableWillReturnFromUnderlyingStream()
+    {
+        $this->stream->expects($this->once())->method('isReadable')->willReturn(true);
+        $this->assertTrue($this->client->isReadable());
+    }
+
+    public function testResumeWillResumeUnderlyingStream()
+    {
+        $this->stream->expects($this->once())->method('resume');
+        $this->client->resume();
+    }
+
+    public function testPauseWillPauseUnderlyingStream()
+    {
+        $this->stream->expects($this->once())->method('pause');
+        $this->client->pause();
+    }
+
+    public function testPipeWillReturnDestStream()
+    {
+        $dest = $this->getMock('React\Stream\WritableStreamInterface');
+
+        $this->assertEquals($dest, $this->client->pipe($dest));
+    }
+
     public function testSendClientInit()
     {
         $this->expectSendMap();
