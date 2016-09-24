@@ -102,6 +102,9 @@ class FunctionalTest extends TestCase
         $message = $this->awaitMessage($client);
         $this->assertEquals('ClientLoginAck', $message['MsgType']);
 
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('SessionInit', $message['MsgType']);
+
         return $message;
     }
 
