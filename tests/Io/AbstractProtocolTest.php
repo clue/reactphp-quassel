@@ -4,6 +4,7 @@ use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Io\Binary;
 use Clue\React\Quassel\Io\PacketParser;
 use Clue\QDataStream\Reader;
+use Clue\QDataStream\QVariant;
 
 abstract class AbstractProtocolTest extends TestCase
 {
@@ -27,18 +28,15 @@ abstract class AbstractProtocolTest extends TestCase
         $this->assertEquals($in, $this->protocol->readVariant($packet));
     }
 
-    private function readDataFromPacket($packet)
+    public function testUserTypeBufferId()
     {
-        $parser = new PacketParser(new Binary());
+        $packet = $this->protocol->writeVariantList(array(
+            1000,
+            new QVariant(10, 'BufferId')
+        ));
 
-        $variant = null;
+        $out = $this->protocol->readVariant($packet);
 
-        $parser->push($packet, function ($data) use (&$variant) {
-            $variant = $data;
-        });
-
-        $this->assertNotNull($variant);
-
-        return $variant;
+        $this->assertEquals(array(1000, 10), $out);
     }
 }

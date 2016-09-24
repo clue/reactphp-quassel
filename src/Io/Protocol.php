@@ -77,9 +77,15 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'Message' => function (Reader $reader) {
+                // create DateTime object with local time zone from given unix timestamp
+                $datetime = function ($timestamp) {
+                    $d = new \DateTime('@' . $timestamp);
+                    $d->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
+                    return $d;
+                };
                 return array(
                     'id'         => $reader->readUInt(),
-                    'timestamp'  => new \DateTime('@' . $reader->readUInt()),
+                    'timestamp'  => $datetime($reader->readUInt()),
                     'type'       => $reader->readUInt(),
                     'flags'      => $reader->readUChar(),
                     'bufferInfo' => $reader->readQUserTypeByName('BufferInfo'),
