@@ -1,6 +1,9 @@
 <?php
 
 use Clue\React\Quassel\Io\Protocol;
+use Clue\QDataStream\Writer;
+use Clue\QDataStream\QVariant;
+use Clue\QDataStream\Types;
 
 class DatastreamProtocolTest extends AbstractProtocolTest
 {
@@ -31,5 +34,24 @@ class DatastreamProtocolTest extends AbstractProtocolTest
         $expected = array(Protocol::REQUEST_INITDATA, 'Network', '1', array('k1' => 'v1', 'k2' => 'v2'));
 
         $this->assertEquals($expected, $this->protocol->readVariant($this->protocol->writeVariantList($message)));
+    }
+
+    public function testReceiveHeartBeatRequestWithCorrectTimeZone()
+    {
+        date_default_timezone_set('Europe/Berlin');
+
+        $writer = new Writer();
+        $writer->writeQVariantList(array(
+            Protocol::REQUEST_HEARTBEAT,
+            new QVariant(new \DateTime('2016-09-24 14:20:00.123+00:00'), Types::TYPE_QDATETIME)
+        ));
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->readVariant($packet);
+
+        $this->assertCount(2, $values);
+        $this->assertEquals(Protocol::REQUEST_HEARTBEAT, $values[0]);
+        $this->assertEquals(new \DateTime('2016-09-24 16:20:00.123', new \DateTimeZone('Europe/Berlin')), $values[1]);
     }
 }

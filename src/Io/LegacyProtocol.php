@@ -37,6 +37,14 @@ class LegacyProtocol extends Protocol
         $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
 
         // legacy protcol always uses type prefix, so just read as variant
-        return $reader->readQVariant();
+        $q = $reader->readQVariant();
+
+        // ping requests will actually be sent as QTime which assumes UTC timezone
+        // times will be returned with local timezone, so account for offset to UTC
+        if (isset($q[0]) && ($q[0] === self::REQUEST_HEARTBEAT || $q[0] === self::REQUEST_HEARTBEATREPLY)) {
+            $q[1]->modify($q[1]->getOffset() .  ' seconds');
+        }
+
+        return $q;
     }
 }

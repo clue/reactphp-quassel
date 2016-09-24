@@ -19,7 +19,7 @@
         "react/socket-client": "^0.5 || ^0.4 || ^0.3",
         "react/dns": "~0.4.0|~0.3.0",
         "react/promise": "~2.0|~1.1",
-        "clue/qdatastream": "~0.5.0"
+        "clue/qdatastream": "^0.6"
     },
     "require-dev": {
         "clue/block-react": "^1.1",
