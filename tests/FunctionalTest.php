@@ -48,7 +48,7 @@ class FunctionalTest extends TestCase
         $factory = new Factory(self::$loop);
         $promise = $factory->createClient(self::$host);
 
-        $client = Block\await($promise, self::$loop);
+        $client = Block\await($promise, self::$loop, 10.0);
 
         return $client;
     }
@@ -127,7 +127,7 @@ class FunctionalTest extends TestCase
 
         $client->sendHeartBeatRequest($time);
 
-        $received = Block\await($promise, self::$loop);
+        $received = Block\await($promise, self::$loop, 10.0);
 
         $this->assertEquals($time, $received);
     }
@@ -143,7 +143,7 @@ class FunctionalTest extends TestCase
 
         $client->close();
 
-        return Block\await($promise, self::$loop);
+        return Block\await($promise, self::$loop, 10.0);
     }
 
     private function awaitMessage(Client $client)
@@ -153,6 +153,6 @@ class FunctionalTest extends TestCase
 
             $client->once('error', $reject);
             $client->once('close', $reject);
-        }), self::$loop);
+        }), self::$loop, 10.0);
     }
 }
