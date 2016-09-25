@@ -8,7 +8,7 @@ class ClientTest extends TestCase
 {
     public function setUp()
     {
-        $this->stream = $this->getMockBuilder('React\Stream\Stream')->disableOriginalConstructor()->getMock();
+        $this->stream = $this->getMockBuilder('React\Stream\Stream')->disableOriginalConstructor()->setMethods(array('write', 'end', 'close', 'pause', 'resume', 'isReadable', 'isWritable'))->getMock();
         $this->protocol = $this->getMockBuilder('Clue\React\Quassel\Io\Protocol')->disableOriginalConstructor()->getMock();
         $this->splitter = $this->getMockBuilder('Clue\React\Quassel\Io\PacketSplitter')->disableOriginalConstructor()->getMock();
 
@@ -49,6 +49,44 @@ class ClientTest extends TestCase
         $dest = $this->getMock('React\Stream\WritableStreamInterface');
 
         $this->assertEquals($dest, $this->client->pipe($dest));
+    }
+
+    public function testCloseEventWillBeForwarded()
+    {
+        $this->client->on('close', $this->expectCallableOnce());
+        $this->stream->emit('close');
+    }
+
+    public function testEndEventWillBeForwardedAndClose()
+    {
+        $this->client->on('end', $this->expectCallableOnce());
+        $this->stream->expects($this->once())->method('close');
+        $this->stream->emit('end');
+    }
+
+    public function testErrorEventWillBeForwardedAndClose()
+    {
+        $e = new \RuntimeException();
+
+        $this->client->on('error', $this->expectCallableOnceWith($e));
+        $this->stream->expects($this->once())->method('close');
+        $this->stream->emit('error', array($e));
+    }
+
+    public function testDataEventWillNotBeForwardedIfItIsAnIncompletePacket()
+    {
+        $this->splitter->expects($this->once())->method('push')->with("hello", array($this->client, 'handlePacket'));
+        $this->client->on('data', $this->expectCallableNever());
+
+        $this->stream->emit('data', array("hello"));
+    }
+
+    public function testDataEventWillBeForwardedFromSplitterThroughProtocolParser()
+    {
+        $this->protocol->expects($this->once())->method('readVariant')->with('hello')->willReturn('parsed');
+        $this->client->on('data', $this->expectCallableOnceWith('parsed'));
+
+        $this->client->handlePacket('hello');
     }
 
     public function testSendClientInit()

@@ -103,6 +103,14 @@ $client->on('data', function ($data) {
     var_dump($data);
 });
 
+$client->on('end', function () {
+    // connection ended, client will close
+});
+
+$client->on('error', function (Exception $e) {
+    // an error occured, client will close
+});
+
 $client->on('close', function () {
     // the connection to Quassel IRC just closed
 });

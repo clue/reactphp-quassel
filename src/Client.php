@@ -22,7 +22,7 @@ class Client extends EventEmitter implements ReadableStreamInterface
     public function __construct(Stream $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
-            $protocol = Protocol::createFromProbe(0);;
+            $protocol = Protocol::createFromProbe(0);
         }
         if ($splitter === null) {
             $splitter = new PacketSplitter(new Binary());
@@ -33,6 +33,8 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $this->splitter = $splitter;
 
         $stream->on('data', array($this, 'handleData'));
+        $stream->on('end', array($this, 'handleEnd'));
+        $stream->on('error', array($this, 'handleError'));
         $stream->on('close', array($this, 'handleClose'));
     }
 
@@ -277,6 +279,20 @@ class Client extends EventEmitter implements ReadableStreamInterface
         // read variant from packet data and forward as message
         $data = $this->protocol->readVariant($packet);
         $this->emit('data', array($data));
+    }
+
+    /** @internal */
+    public function handleEnd()
+    {
+        $this->emit('end');
+        $this->close();
+    }
+
+    /** @internal */
+    public function handleError(\Exception $e)
+    {
+        $this->emit('error', array($e));
+        $this->close();
     }
 
     /** @internal */
