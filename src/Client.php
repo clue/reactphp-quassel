@@ -131,7 +131,7 @@ class Client extends EventEmitter
     {
         $this->sendList(array(
             Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
+            $this->createQVariantDateTime($dt)
         ));
     }
 
@@ -139,7 +139,7 @@ class Client extends EventEmitter
     {
         $this->sendList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
-            new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME)
+            $this->createQVariantDateTime($dt)
         ));
     }
 
@@ -274,5 +274,19 @@ class Client extends EventEmitter
         $this->stream->write($this->splitter->writePacket(
             $this->protocol->writeVariantMap($data)
         ));
+    }
+
+    private function createQVariantDateTime(\DateTime $dt)
+    {
+        // The legacy protocol uses QTime which does not obey timezones or DST
+        // properties. Instead, convert everything to UTC so we send absolute
+        // timestamps irrespective of actual timezone.
+        if ($this->protocol->isLegacy()) {
+            $dt = clone $dt;
+            $dt->setTimeZone(new \DateTimeZone('UTC'));
+        }
+
+        // legacy protocol uses limited QTime while newer datagram protocol uses proper QDateTime
+        return new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME);
     }
 }
