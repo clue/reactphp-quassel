@@ -44,15 +44,15 @@ class Client extends EventEmitter implements ReadableStreamInterface
      * expect either of ClientInitAck or ClientInitReject["Error"] in response
      *
      * ClientInitAck["Configured"] === true means you should continue with
-     * sendClientInit() next
+     * writeClientInit() next
      *
      * ClientInitAck["Configured"] === false means you should continue with
-     * sendCoreSetupData() next
+     * writeCoreSetupData() next
      *
      * @param boolean $compression (only for legacy protocol)
      * @param boolean $ssl         (only for legacy protocol)
      */
-    public function sendClientInit($compression = false, $ssl = false)
+    public function writeClientInit($compression = false, $ssl = false)
     {
         // MMM dd yyyy HH:mm:ss
         $date = date('M d Y H:i:s');
@@ -71,7 +71,7 @@ class Client extends EventEmitter implements ReadableStreamInterface
             );
         }
 
-        $this->sendMap($data);
+        $this->writeMap($data);
     }
 
     /**
@@ -82,9 +82,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
      * @param string $user
      * @param string $password
      */
-    public function sendClientLogin($user, $password)
+    public function writeClientLogin($user, $password)
     {
-        $this->sendMap(array(
+        $this->writeMap(array(
             'MsgType' => 'ClientLogin',
             'User' => (string)$user,
             'Password' => (string)$password
@@ -108,9 +108,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
      * @param string $backend    One of the available "DisplayName" values from ClientInitAck["StorageBackends"]
      * @param array  $properties (optional) map with keys from "SetupKeys" from ClientInitAck["StorageBackends"], where missing keys default to those from the "SetupDefaults"
      */
-    public function sendCoreSetupData($user, $password, $backend = 'SQLite', $properties = array())
+    public function writeCoreSetupData($user, $password, $backend = 'SQLite', $properties = array())
     {
-        $this->sendMap(array(
+        $this->writeMap(array(
             'MsgType' => 'CoreSetupData',
             'SetupData' => array(
                 'AdminUser' => (string)$user,
@@ -121,34 +121,34 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendInitRequest($class, $name)
+    public function writeInitRequest($class, $name)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_INITREQUEST,
             (string)$class,
             (string)$name
         ));
     }
 
-    public function sendHeartBeatRequest(\DateTime $dt)
+    public function writeHeartBeatRequest(\DateTime $dt)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_HEARTBEAT,
             $this->createQVariantDateTime($dt)
         ));
     }
 
-    public function sendHeartBeatReply(\DateTime $dt)
+    public function writeHeartBeatReply(\DateTime $dt)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_HEARTBEATREPLY,
             $this->createQVariantDateTime($dt)
         ));
     }
 
-    public function sendBufferInput($bufferInfo, $input)
+    public function writeBufferInput($bufferInfo, $input)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_RPCCALL,
             "2sendInput(BufferInfo,QString)",
             new QVariant($bufferInfo, 'BufferInfo'),
@@ -156,9 +156,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
+    public function writeBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "BacklogManager",
             "",
@@ -171,9 +171,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestRemove($bufferId)
+    public function writeBufferRequestRemove($bufferId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -182,9 +182,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestMarkAsRead($bufferId)
+    public function writeBufferRequestMarkAsRead($bufferId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -193,9 +193,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestSetLastSeenMessage($bufferId, $messageId)
+    public function writeBufferRequestSetLastSeenMessage($bufferId, $messageId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -205,9 +205,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestSetMarkerLine($bufferId, $messageId)
+    public function writeBufferRequestSetMarkerLine($bufferId, $messageId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -217,9 +217,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendNetworkRequestConnect($networkId)
+    public function writeNetworkRequestConnect($networkId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
@@ -227,9 +227,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendNetworkRequestDisconnect($networkId)
+    public function writeNetworkRequestDisconnect($networkId)
     {
-        $this->sendList(array(
+        $this->writeList(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
@@ -301,14 +301,14 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $this->emit('close');
     }
 
-    private function sendList($data)
+    private function writeList($data)
     {
         $this->stream->write($this->splitter->writePacket(
             $this->protocol->writeVariantList($data)
         ));
     }
 
-    private function sendMap($data)
+    private function writeMap($data)
     {
         $this->stream->write($this->splitter->writePacket(
             $this->protocol->writeVariantMap($data)

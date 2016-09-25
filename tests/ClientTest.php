@@ -4,6 +4,7 @@ use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
+
 class ClientTest extends TestCase
 {
     public function setUp()
@@ -89,32 +90,32 @@ class ClientTest extends TestCase
         $this->client->handlePacket('hello');
     }
 
-    public function testSendClientInit()
+    public function testWriteClientInit()
     {
-        $this->expectSendMap();
-        $this->client->sendClientInit();
+        $this->expectWriteMap();
+        $this->client->writeClientInit();
     }
 
-    public function testSendClientLogin()
+    public function testWriteClientLogin()
     {
-        $this->expectSendMap();
-        $this->client->sendClientLogin('a', 'b');
+        $this->expectWriteMap();
+        $this->client->writeClientLogin('a', 'b');
     }
 
-    public function testSendCoreSetupData()
+    public function testWriteCoreSetupData()
     {
-        $this->expectSendMap();
-        $this->client->sendCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
+        $this->expectWriteMap();
+        $this->client->writeCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
     }
 
-    public function testSendHeartBeatRequest()
+    public function testWriteHeartBeatRequest()
     {
         $dt = new \DateTime();
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    public function testSendHeartBeatReplyLegacyAsQTime()
+    public function testWriteHeartBeatReplyLegacyAsQTime()
     {
         $dt = new \DateTime();
 
@@ -125,10 +126,10 @@ class ClientTest extends TestCase
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    public function testSendHeartBeatReplyNonLegacyAsQDateTime()
+    public function testWriteHeartBeatReplyNonLegacyAsQDateTime()
     {
         $dt = new \DateTime();
 
@@ -139,10 +140,10 @@ class ClientTest extends TestCase
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    private function expectSendMap()
+    private function expectWriteMap()
     {
         $this->protocol->expects($this->once())->method('writeVariantMap');
         $this->splitter->expects($this->once())->method('writePacket');
