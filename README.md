@@ -63,6 +63,7 @@ $factory->createClient('legacy://quassel.example.com:1234');
 
 The `Client` is responsible for exchanging messages with your Quassel IRC core
 and emitting incoming messages.
+It implements the [`ReadableStreamInterface`](https://github.com/reactphp/stream#readablestreaminterface).
 
 #### Commands
 
@@ -97,9 +98,17 @@ The `on($eventName, $eventHandler)` method can be used to register a new event h
 Incoming events will be forwarded to registered event handler callbacks:
 
 ```php
-$client->on('message', function ($data) {
+$client->on('data', function ($data) {
     // process an incoming message (raw message array)
     var_dump($data);
+});
+
+$client->on('end', function () {
+    // connection ended, client will close
+});
+
+$client->on('error', function (Exception $e) {
+    // an error occured, client will close
 });
 
 $client->on('close', function () {

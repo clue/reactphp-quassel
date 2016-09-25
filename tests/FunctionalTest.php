@@ -120,12 +120,12 @@ class FunctionalTest extends TestCase
         $promise = new Promise(function ($resolve) use ($client) {
             $callback = function ($message) use ($resolve, &$callback, $client) {
                 if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
-                    $client->removeListener('message', $callback);
+                    $client->removeListener('data', $callback);
                     $resolve($message[1]);
                 }
             };
 
-            $client->on('message', $callback);
+            $client->on('data', $callback);
         });
 
         $client->sendHeartBeatRequest($time);
@@ -152,7 +152,7 @@ class FunctionalTest extends TestCase
     private function awaitMessage(Client $client)
     {
         return Block\await(new Promise(function ($resolve, $reject) use ($client) {
-            $client->once('message', $resolve);
+            $client->once('data', $resolve);
 
             $client->once('error', $reject);
             $client->once('close', $reject);

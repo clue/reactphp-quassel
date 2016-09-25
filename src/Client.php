@@ -3,16 +3,17 @@
 namespace Clue\React\Quassel;
 
 use React\Stream\Stream;
-use Clue\Hexdump\Hexdump;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
-use React\Promise\Deferred;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
+use React\Stream\ReadableStreamInterface;
+use React\Stream\WritableStreamInterface;
+use React\Stream\Util;
 
-class Client extends EventEmitter
+class Client extends EventEmitter implements ReadableStreamInterface
 {
     private $stream;
     private $protocol;
@@ -21,7 +22,7 @@ class Client extends EventEmitter
     public function __construct(Stream $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
-            $protocol = Protocol::createFromProbe(0);;
+            $protocol = Protocol::createFromProbe(0);
         }
         if ($splitter === null) {
             $splitter = new PacketSplitter(new Binary());
@@ -32,6 +33,8 @@ class Client extends EventEmitter
         $this->splitter = $splitter;
 
         $stream->on('data', array($this, 'handleData'));
+        $stream->on('end', array($this, 'handleEnd'));
+        $stream->on('error', array($this, 'handleError'));
         $stream->on('close', array($this, 'handleClose'));
     }
 
@@ -239,6 +242,28 @@ class Client extends EventEmitter
         $this->stream->close();
     }
 
+    public function isReadable()
+    {
+        return $this->stream->isReadable();
+    }
+
+    public function pipe(WritableStreamInterface $dest, array $options = array())
+    {
+        Util::pipe($this, $dest, $options);
+
+        return $dest;
+    }
+
+    public function pause()
+    {
+        $this->stream->pause();
+    }
+
+    public function resume()
+    {
+        $this->stream->resume();
+    }
+
     /** @internal */
     public function handleData($chunk)
     {
@@ -253,13 +278,27 @@ class Client extends EventEmitter
         // complete packet data received
         // read variant from packet data and forward as message
         $data = $this->protocol->readVariant($packet);
-        $this->emit('message', array($data, $this));
+        $this->emit('data', array($data));
+    }
+
+    /** @internal */
+    public function handleEnd()
+    {
+        $this->emit('end');
+        $this->close();
+    }
+
+    /** @internal */
+    public function handleError(\Exception $e)
+    {
+        $this->emit('error', array($e));
+        $this->close();
     }
 
     /** @internal */
     public function handleClose()
     {
-        $this->emit('close', array($this));
+        $this->emit('close');
     }
 
     private function sendList($data)
