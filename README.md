@@ -5,6 +5,21 @@ built on top of [React PHP](http://reactphp.org/).
 
 This is a low-level networking library which can be used to communicate with your Quassel IRC core.
 
+**Table of contents**
+
+* [Quickstart example](#quickstart-example)
+* [Usage](#usage)
+  * [Factory](#factory)
+    * [createClient()](#createclient)
+  * [Client](#client)
+    * [Commands](#commands)
+    * [Processing](#processing)
+    * [on()](#on)
+    * [close()](#close)
+* [Install](#install)
+* [Tests](#tests)
+* [License](#license)
+
 > Note: This project is in beta stage! Feel free to report any issues you encounter.
 
 ## Quickstart example
