@@ -2,24 +2,23 @@
 
 namespace Clue\React\Quassel;
 
-use React\Stream\Stream;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
-use React\Stream\ReadableStreamInterface;
 use React\Stream\WritableStreamInterface;
 use React\Stream\Util;
+use React\Stream\DuplexStreamInterface;
 
-class Client extends EventEmitter implements ReadableStreamInterface
+class Client extends EventEmitter implements DuplexStreamInterface
 {
     private $stream;
     private $protocol;
     private $splitter;
 
-    public function __construct(Stream $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
+    public function __construct(DuplexStreamInterface $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
             $protocol = Protocol::createFromProbe(0);
@@ -36,6 +35,7 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $stream->on('end', array($this, 'handleEnd'));
         $stream->on('error', array($this, 'handleError'));
         $stream->on('close', array($this, 'handleClose'));
+        $stream->on('drain', array($this, 'handleDrain'));
     }
 
     /**
@@ -44,15 +44,16 @@ class Client extends EventEmitter implements ReadableStreamInterface
      * expect either of ClientInitAck or ClientInitReject["Error"] in response
      *
      * ClientInitAck["Configured"] === true means you should continue with
-     * sendClientInit() next
+     * writeClientInit() next
      *
      * ClientInitAck["Configured"] === false means you should continue with
-     * sendCoreSetupData() next
+     * writeCoreSetupData() next
      *
      * @param boolean $compression (only for legacy protocol)
      * @param boolean $ssl         (only for legacy protocol)
+     * @return boolean
      */
-    public function sendClientInit($compression = false, $ssl = false)
+    public function writeClientInit($compression = false, $ssl = false)
     {
         // MMM dd yyyy HH:mm:ss
         $date = date('M d Y H:i:s');
@@ -71,7 +72,7 @@ class Client extends EventEmitter implements ReadableStreamInterface
             );
         }
 
-        $this->sendMap($data);
+        return $this->write($data);
     }
 
     /**
@@ -81,10 +82,11 @@ class Client extends EventEmitter implements ReadableStreamInterface
      *
      * @param string $user
      * @param string $password
+     * @return boolean
      */
-    public function sendClientLogin($user, $password)
+    public function writeClientLogin($user, $password)
     {
-        $this->sendMap(array(
+        return $this->write(array(
             'MsgType' => 'ClientLogin',
             'User' => (string)$user,
             'Password' => (string)$password
@@ -107,10 +109,11 @@ class Client extends EventEmitter implements ReadableStreamInterface
      * @param string $password   admin password
      * @param string $backend    One of the available "DisplayName" values from ClientInitAck["StorageBackends"]
      * @param array  $properties (optional) map with keys from "SetupKeys" from ClientInitAck["StorageBackends"], where missing keys default to those from the "SetupDefaults"
+     * @return boolean
      */
-    public function sendCoreSetupData($user, $password, $backend = 'SQLite', $properties = array())
+    public function writeCoreSetupData($user, $password, $backend = 'SQLite', $properties = array())
     {
-        $this->sendMap(array(
+        return $this->write(array(
             'MsgType' => 'CoreSetupData',
             'SetupData' => array(
                 'AdminUser' => (string)$user,
@@ -121,34 +124,34 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendInitRequest($class, $name)
+    public function writeInitRequest($class, $name)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_INITREQUEST,
             (string)$class,
             (string)$name
         ));
     }
 
-    public function sendHeartBeatRequest(\DateTime $dt)
+    public function writeHeartBeatRequest(\DateTime $dt)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_HEARTBEAT,
             $this->createQVariantDateTime($dt)
         ));
     }
 
-    public function sendHeartBeatReply(\DateTime $dt)
+    public function writeHeartBeatReply(\DateTime $dt)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_HEARTBEATREPLY,
             $this->createQVariantDateTime($dt)
         ));
     }
 
-    public function sendBufferInput($bufferInfo, $input)
+    public function writeBufferInput($bufferInfo, $input)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_RPCCALL,
             "2sendInput(BufferInfo,QString)",
             new QVariant($bufferInfo, 'BufferInfo'),
@@ -156,9 +159,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
+    public function writeBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BacklogManager",
             "",
@@ -171,9 +174,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestRemove($bufferId)
+    public function writeBufferRequestRemove($bufferId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -182,9 +185,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestMarkAsRead($bufferId)
+    public function writeBufferRequestMarkAsRead($bufferId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -193,9 +196,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestSetLastSeenMessage($bufferId, $messageId)
+    public function writeBufferRequestSetLastSeenMessage($bufferId, $messageId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -205,9 +208,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendBufferRequestSetMarkerLine($bufferId, $messageId)
+    public function writeBufferRequestSetMarkerLine($bufferId, $messageId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BufferSyncer",
             "",
@@ -217,9 +220,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendNetworkRequestConnect($networkId)
+    public function writeNetworkRequestConnect($networkId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
@@ -227,9 +230,9 @@ class Client extends EventEmitter implements ReadableStreamInterface
         ));
     }
 
-    public function sendNetworkRequestDisconnect($networkId)
+    public function writeNetworkRequestDisconnect($networkId)
     {
-        $this->sendList(array(
+        return $this->write(array(
             Protocol::REQUEST_SYNC,
             "Network",
             (string)$networkId,
@@ -247,6 +250,11 @@ class Client extends EventEmitter implements ReadableStreamInterface
         return $this->stream->isReadable();
     }
 
+    public function isWritable()
+    {
+        return $this->stream->isWritable();
+    }
+
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
         Util::pipe($this, $dest, $options);
@@ -262,6 +270,35 @@ class Client extends EventEmitter implements ReadableStreamInterface
     public function resume()
     {
         $this->stream->resume();
+    }
+
+    /**
+     * writes the given data array to the underlying connection
+     *
+     * This is a low level method that should only be used if you know what
+     * you're doing. Also check the other write*() methods instead.
+     *
+     * @param array $data
+     * @return boolean returns boolean false if buffer is full and writing should be throttled
+     */
+    public function write($data)
+    {
+        if (isset($data[0])) {
+            $packet = $this->protocol->writeVariantList($data);
+        } else {
+            $packet = $this->protocol->writeVariantMap($data);
+        }
+
+        return $this->stream->write($this->splitter->writePacket($packet));
+    }
+
+    public function end($data = null)
+    {
+        if ($data !== null) {
+            $this->write($data);
+        }
+
+        $this->stream->end();
     }
 
     /** @internal */
@@ -301,18 +338,10 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $this->emit('close');
     }
 
-    private function sendList($data)
+    /** @internal */
+    public function handleDrain()
     {
-        $this->stream->write($this->splitter->writePacket(
-            $this->protocol->writeVariantList($data)
-        ));
-    }
-
-    private function sendMap($data)
-    {
-        $this->stream->write($this->splitter->writePacket(
-            $this->protocol->writeVariantMap($data)
-        ));
+        $this->emit('drain');
     }
 
     private function createQVariantDateTime(\DateTime $dt)

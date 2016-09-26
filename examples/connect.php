@@ -45,18 +45,18 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
                 echo 'Hit enter to set-up server with defaults, otherwise cancel program now';
                 fgets(STDIN);
 
-                $client->sendCoreSetupData($user['name'], $user['password']);
+                $client->writeCoreSetupData($user['name'], $user['password']);
 
                 return;
             }
             var_dump('core ready, now logging in');
-            $client->sendClientLogin($user['name'], $user['password']);
+            $client->writeClientLogin($user['name'], $user['password']);
 
             return;
         }
         if ($type === 'CoreSetupAck') {
             var_dump('core set-up, now logging in');
-            $client->sendClientLogin($user['name'], $user['password']);
+            $client->writeClientLogin($user['name'], $user['password']);
 
             return;
         }
@@ -83,13 +83,13 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
 
             foreach ($message['SessionState']['NetworkIds'] as $nid) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
-                $client->sendInitRequest("Network", $nid);
+                $client->writeInitRequest("Network", $nid);
             }
 
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
                 if ($buffer['type'] === 2) { // type == 4 for user
                     var_dump('requesting IrcChannel for ' . $buffer['name']);
-                    $client->sendInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
+                    $client->writeInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
                 }
             }
 
@@ -105,7 +105,7 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
 
         if ($type === Protocol::REQUEST_HEARTBEAT) {
             //var_dump('heartbeat', $message[1]);
-            $client->sendHeartBeatReply($message[1]);
+            $client->writeHeartBeatReply($message[1]);
 
             return;
         }
@@ -125,7 +125,7 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
         echo 'received unhandled: ' . json_encode($message) . PHP_EOL;
     });
 
-    $client->sendClientInit();
+    $client->writeClientInit();
 
     $client->on('close', function () use (&$timer) {
         var_dump('CLOSED');

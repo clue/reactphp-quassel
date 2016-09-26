@@ -57,9 +57,9 @@ class FunctionalTest extends TestCase
      * @depends testCreateClient
      * @param Client $client
      */
-    public function testSendClientInit(Client $client)
+    public function testWriteClientInit(Client $client)
     {
-        $client->sendClientInit();
+        $client->writeClientInit();
 
         $message = $this->awaitMessage($client);
         $this->assertEquals('ClientInitAck', $message['MsgType']);
@@ -69,18 +69,18 @@ class FunctionalTest extends TestCase
 
     /**
      * @depends testCreateClient
-     * @depends testSendClientInit
+     * @depends testWriteClientInit
      *
      * @param Client $client
      * @param array  $message
      */
-    public function testSendCoreSetupData(Client $client, $message)
+    public function testWriteCoreSetupData(Client $client, $message)
     {
         if ($message['Configured']) {
             $this->markTestSkipped('Given core already configured, can not set-up');
         }
 
-        $client->sendCoreSetupData(self::$username, self::$password);
+        $client->writeCoreSetupData(self::$username, self::$password);
 
         $message = $this->awaitMessage($client);
         $this->assertEquals('CoreSetupAck', $message['MsgType']);
@@ -90,14 +90,14 @@ class FunctionalTest extends TestCase
 
     /**
      * @depends testCreateClient
-     * @depends testSendClientInit
+     * @depends testWriteClientInit
      *
      * @param Client $client
      * @param array  $message
      */
-    public function testSendClientLogin(Client $client, $message)
+    public function testWriteClientLogin(Client $client, $message)
     {
-        $client->sendClientLogin(self::$username, self::$password);
+        $client->writeClientLogin(self::$username, self::$password);
 
         $message = $this->awaitMessage($client);
         $this->assertEquals('ClientLoginAck', $message['MsgType']);
@@ -113,7 +113,7 @@ class FunctionalTest extends TestCase
      *
      * @param Client $client
      */
-    public function testSendHeartBeat(Client $client)
+    public function testWriteHeartBeat(Client $client)
     {
         $time = new \DateTime();
 
@@ -128,7 +128,7 @@ class FunctionalTest extends TestCase
             $client->on('data', $callback);
         });
 
-        $client->sendHeartBeatRequest($time);
+        $client->writeHeartBeatRequest($time);
 
         $received = Block\await($promise, self::$loop, 10.0);
 

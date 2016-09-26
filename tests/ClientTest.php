@@ -4,6 +4,7 @@ use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
+
 class ClientTest extends TestCase
 {
     public function setUp()
@@ -17,6 +18,7 @@ class ClientTest extends TestCase
 
     public function testCtorOptionalArgs()
     {
+        $this->stream = $this->getMock('React\Stream\DuplexStreamInterface');
         new Client($this->stream);
     }
 
@@ -30,6 +32,12 @@ class ClientTest extends TestCase
     {
         $this->stream->expects($this->once())->method('isReadable')->willReturn(true);
         $this->assertTrue($this->client->isReadable());
+    }
+
+    public function testIsWritableWillReturnFromUnderlyingStream()
+    {
+        $this->stream->expects($this->once())->method('isWritable')->willReturn(true);
+        $this->assertTrue($this->client->isWritable());
     }
 
     public function testResumeWillResumeUnderlyingStream()
@@ -55,6 +63,12 @@ class ClientTest extends TestCase
     {
         $this->client->on('close', $this->expectCallableOnce());
         $this->stream->emit('close');
+    }
+
+    public function testDrainEventWillBeForwarded()
+    {
+        $this->client->on('drain', $this->expectCallableOnce());
+        $this->stream->emit('drain');
     }
 
     public function testEndEventWillBeForwardedAndClose()
@@ -89,32 +103,52 @@ class ClientTest extends TestCase
         $this->client->handlePacket('hello');
     }
 
-    public function testSendClientInit()
+    public function testWriteArrayWillWriteMap()
     {
-        $this->expectSendMap();
-        $this->client->sendClientInit();
+        $this->expectWriteMap();
+        $this->client->write(array('hello' => 'world'));
     }
 
-    public function testSendClientLogin()
+    public function testEndWithArrayWillWriteMap()
     {
-        $this->expectSendMap();
-        $this->client->sendClientLogin('a', 'b');
+        $this->expectWriteMap();
+        $this->stream->expects($this->once())->method('end');
+        $this->client->end(array('hello' => 'world'));
     }
 
-    public function testSendCoreSetupData()
+    public function testEndWithoutDataWillNowWrite()
     {
-        $this->expectSendMap();
-        $this->client->sendCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
+        $this->stream->expects($this->never())->method('write');
+        $this->stream->expects($this->once())->method('end');
+        $this->client->end();
     }
 
-    public function testSendHeartBeatRequest()
+    public function testWriteClientInit()
+    {
+        $this->expectWriteMap();
+        $this->client->writeClientInit();
+    }
+
+    public function testWriteClientLogin()
+    {
+        $this->expectWriteMap();
+        $this->client->writeClientLogin('a', 'b');
+    }
+
+    public function testWriteCoreSetupData()
+    {
+        $this->expectWriteMap();
+        $this->client->writeCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
+    }
+
+    public function testWriteHeartBeatRequest()
     {
         $dt = new \DateTime();
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    public function testSendHeartBeatReplyLegacyAsQTime()
+    public function testWriteHeartBeatReplyLegacyAsQTime()
     {
         $dt = new \DateTime();
 
@@ -125,10 +159,10 @@ class ClientTest extends TestCase
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    public function testSendHeartBeatReplyNonLegacyAsQDateTime()
+    public function testWriteHeartBeatReplyNonLegacyAsQDateTime()
     {
         $dt = new \DateTime();
 
@@ -139,10 +173,10 @@ class ClientTest extends TestCase
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->sendHeartBeatRequest($dt);
+        $this->client->writeHeartBeatRequest($dt);
     }
 
-    private function expectSendMap()
+    private function expectWriteMap()
     {
         $this->protocol->expects($this->once())->method('writeVariantMap');
         $this->splitter->expects($this->once())->method('writePacket');
