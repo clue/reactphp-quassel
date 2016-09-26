@@ -71,14 +71,14 @@ i.e. it is both a normal readable and writable stream instance.
 The `Client` exposes several public methods which can be used to send outgoing commands to your Quassel IRC core:
 
 ```php
-$client->sendClientInit()
-$client->sendClientLogin($user, $password);
+$client->writeClientInit()
+$client->writeClientLogin($user, $password);
 
-$client->sendHeartBeatRequest($time);
-$client->sendHeartBeatReply($time);
+$client->writeHeartBeatRequest($time);
+$client->writeHeartBeatReply($time);
 
-$client->sendBufferRequestBacklog($bufferId, $maxAmount);
-$client->sendBufferInput($bufferInfo, $input);
+$client->writeBufferRequestBacklog($bufferId, $maxAmount);
+$client->writeBufferInput($bufferInfo, $input);
 
 // many more…
 ```
