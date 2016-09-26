@@ -18,6 +18,7 @@ class ClientTest extends TestCase
 
     public function testCtorOptionalArgs()
     {
+        $this->stream = $this->getMock('React\Stream\DuplexStreamInterface');
         new Client($this->stream);
     }
 

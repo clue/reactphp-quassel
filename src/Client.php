@@ -2,7 +2,6 @@
 
 namespace Clue\React\Quassel;
 
-use React\Stream\Stream;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Binary;
@@ -19,7 +18,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     private $protocol;
     private $splitter;
 
-    public function __construct(Stream $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
+    public function __construct(DuplexStreamInterface $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
             $protocol = Protocol::createFromProbe(0);
