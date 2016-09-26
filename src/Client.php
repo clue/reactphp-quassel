@@ -9,11 +9,11 @@ use Clue\React\Quassel\Io\Binary;
 use Evenement\EventEmitter;
 use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
-use React\Stream\ReadableStreamInterface;
 use React\Stream\WritableStreamInterface;
 use React\Stream\Util;
+use React\Stream\DuplexStreamInterface;
 
-class Client extends EventEmitter implements ReadableStreamInterface, WritableStreamInterface
+class Client extends EventEmitter implements DuplexStreamInterface
 {
     private $stream;
     private $protocol;
