@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.0 (2016-09-26)
+
+*   Feature / BC break: The Client implement DuplexStreamInterface and behaves like a normal stream
+    (#21, #22 by @clue)
+
+    ```php
+    // old (custom "message" event)
+    $client->on('message', $callback);
+    
+    // new (default "data" event)
+    $client->on('data', $callback);
+    
+    // old (applies to app send*() methods
+    $client->sendClientInit(…);
+    
+    // new (now uses write*() prefix)
+    $client->writeClientInit(…);
+    
+    // shared interfaces allow for interoperability with other components
+    $client->pipe($logger);
+    
+    // allows advanced / custom messages through writable interface
+    $client->write(array(…));
+    
+    // supports and reports back pressure to avoid buffer overflows
+    $more = $client->write*(…);
+    $client->pause();
+    $client->resume();
+    ```
+
+*   Feature: Use default time zone and support sub-second accuracy for heartbeats
+    (#20 by @clue)
+
 ## 0.3.1 (2016-09-24)
 
 *   Feature: Support SocketClient v0.5 (while keeping BC)
