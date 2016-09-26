@@ -13,7 +13,7 @@ use React\Stream\ReadableStreamInterface;
 use React\Stream\WritableStreamInterface;
 use React\Stream\Util;
 
-class Client extends EventEmitter implements ReadableStreamInterface
+class Client extends EventEmitter implements ReadableStreamInterface, WritableStreamInterface
 {
     private $stream;
     private $protocol;
@@ -36,6 +36,7 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $stream->on('end', array($this, 'handleEnd'));
         $stream->on('error', array($this, 'handleError'));
         $stream->on('close', array($this, 'handleClose'));
+        $stream->on('drain', array($this, 'handleDrain'));
     }
 
     /**
@@ -250,6 +251,11 @@ class Client extends EventEmitter implements ReadableStreamInterface
         return $this->stream->isReadable();
     }
 
+    public function isWritable()
+    {
+        return $this->stream->isWritable();
+    }
+
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
         Util::pipe($this, $dest, $options);
@@ -265,6 +271,35 @@ class Client extends EventEmitter implements ReadableStreamInterface
     public function resume()
     {
         $this->stream->resume();
+    }
+
+    /**
+     * writes the given data array to the underlying connection
+     *
+     * This is a low level method that should only be used if you know what
+     * you're doing. Also check the other write*() methods instead.
+     *
+     * @param array $data
+     * @return boolean returns boolean false if buffer is full and writing should be throttled
+     */
+    public function write($data)
+    {
+        if (isset($data[0])) {
+            $packet = $this->protocol->writeVariantList($data);
+        } else {
+            $packet = $this->protocol->writeVariantMap($data);
+        }
+
+        return $this->stream->write($this->splitter->writePacket($packet));
+    }
+
+    public function end($data = null)
+    {
+        if ($data !== null) {
+            $this->write($data);
+        }
+
+        $this->stream->end();
     }
 
     /** @internal */
@@ -304,21 +339,10 @@ class Client extends EventEmitter implements ReadableStreamInterface
         $this->emit('close');
     }
 
-    /**
-     * writes the given data array to the stream
-     *
-     * @param array $data
-     * @return boolean returns boolean false if buffer is full and writing should be throttled
-     */
-    private function write($data)
+    /** @internal */
+    public function handleDrain()
     {
-        if (isset($data[0])) {
-            $packet = $this->protocol->writeVariantList($data);
-        } else {
-            $packet = $this->protocol->writeVariantMap($data);
-        }
-
-        return $this->stream->write($this->splitter->writePacket($packet));
+        $this->emit('drain');
     }
 
     private function createQVariantDateTime(\DateTime $dt)

@@ -63,7 +63,8 @@ $factory->createClient('legacy://quassel.example.com:1234');
 
 The `Client` is responsible for exchanging messages with your Quassel IRC core
 and emitting incoming messages.
-It implements the [`ReadableStreamInterface`](https://github.com/reactphp/stream#readablestreaminterface).
+It implements the [`ReadableStreamInterface`](https://github.com/reactphp/stream#readablestreaminterface)
+and [`WritableStreamInterface`](https://github.com/reactphp/stream#writablestreaminterface).
 
 #### Commands
 

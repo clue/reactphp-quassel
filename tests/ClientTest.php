@@ -33,6 +33,12 @@ class ClientTest extends TestCase
         $this->assertTrue($this->client->isReadable());
     }
 
+    public function testIsWritableWillReturnFromUnderlyingStream()
+    {
+        $this->stream->expects($this->once())->method('isWritable')->willReturn(true);
+        $this->assertTrue($this->client->isWritable());
+    }
+
     public function testResumeWillResumeUnderlyingStream()
     {
         $this->stream->expects($this->once())->method('resume');
@@ -56,6 +62,12 @@ class ClientTest extends TestCase
     {
         $this->client->on('close', $this->expectCallableOnce());
         $this->stream->emit('close');
+    }
+
+    public function testDrainEventWillBeForwarded()
+    {
+        $this->client->on('drain', $this->expectCallableOnce());
+        $this->stream->emit('drain');
     }
 
     public function testEndEventWillBeForwardedAndClose()
@@ -88,6 +100,26 @@ class ClientTest extends TestCase
         $this->client->on('data', $this->expectCallableOnceWith('parsed'));
 
         $this->client->handlePacket('hello');
+    }
+
+    public function testWriteArrayWillWriteMap()
+    {
+        $this->expectWriteMap();
+        $this->client->write(array('hello' => 'world'));
+    }
+
+    public function testEndWithArrayWillWriteMap()
+    {
+        $this->expectWriteMap();
+        $this->stream->expects($this->once())->method('end');
+        $this->client->end(array('hello' => 'world'));
+    }
+
+    public function testEndWithoutDataWillNowWrite()
+    {
+        $this->stream->expects($this->never())->method('write');
+        $this->stream->expects($this->once())->method('end');
+        $this->client->end();
     }
 
     public function testWriteClientInit()
