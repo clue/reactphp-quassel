@@ -6,8 +6,8 @@ use Clue\React\Quassel\Io\Prober;
 use Clue\React\Quassel\Io\Protocol;
 use React\EventLoop\LoopInterface;
 use React\Promise;
-use React\SocketClient\ConnectorInterface;
-use React\SocketClient\Connector;
+use React\Socket\ConnectorInterface;
+use React\Socket\Connector;
 use React\Stream\DuplexStreamInterface;
 use InvalidArgumentException;
 
