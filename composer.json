@@ -17,13 +17,13 @@
     	"php": ">=5.3",
         "react/event-loop": "~0.4.0|~0.3.0",
         "react/socket-client": "^0.5 || ^0.4 || ^0.3",
-        "react/dns": "~0.4.0|~0.3.0",
+        "react/dns": "^0.4.1 || ^0.3",
         "react/promise": "~2.0|~1.1",
         "react/stream": "^0.4.2",
         "clue/qdatastream": "^0.6"
     },
     "require-dev": {
         "clue/block-react": "^1.1",
-        "phpunit/phpunit": "^4.8"
+        "phpunit/phpunit": "^5.0 || ^4.8"
     }
 }
