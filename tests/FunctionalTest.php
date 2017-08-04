@@ -115,7 +115,8 @@ class FunctionalTest extends TestCase
      */
     public function testWriteHeartBeat(Client $client)
     {
-        $time = new \DateTime();
+        // explicitly write a fixed time (current date) in order to preserve milliseconds (for PHP 7.1+)
+        $time = new \DateTime('10:20:30.456+00:00');
 
         $promise = new Promise(function ($resolve) use ($client) {
             $callback = function ($message) use ($resolve, &$callback, $client) {
