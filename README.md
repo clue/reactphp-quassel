@@ -151,10 +151,17 @@ See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.
 
 ## Tests
 
-In order to run the tests, you need PHPUnit:
+To run the test suite, you first need to clone this repo and then install all
+dependencies [through Composer](http://getcomposer.org):
 
 ```bash
-$ phpunit
+$ composer install
+```
+
+To run the test suite, go to the project root and run:
+
+```bash
+$ php vendor/bin/phpunit
 ```
 
 The test suite contains both unit tests and functional integration tests.

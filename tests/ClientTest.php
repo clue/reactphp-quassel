@@ -18,7 +18,7 @@ class ClientTest extends TestCase
 
     public function testCtorOptionalArgs()
     {
-        $this->stream = $this->getMock('React\Stream\DuplexStreamInterface');
+        $this->stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
         new Client($this->stream);
     }
 
@@ -54,7 +54,7 @@ class ClientTest extends TestCase
 
     public function testPipeWillReturnDestStream()
     {
-        $dest = $this->getMock('React\Stream\WritableStreamInterface');
+        $dest = $this->getMockBuilder('React\Stream\WritableStreamInterface')->getMock();
 
         $this->assertEquals($dest, $this->client->pipe($dest));
     }
