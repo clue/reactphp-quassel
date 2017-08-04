@@ -24,36 +24,36 @@ class FactoryTest extends TestCase
     public function testPassHostnameAndDefaultPortToConnector()
     {
         $deferred = new Deferred();
-        $this->connector->expects($this->once())->method('create')->with($this->equalTo('example.com', 4242))->will($this->returnValue($deferred->promise()));
+        $this->connector->expects($this->once())->method('connect')->with($this->equalTo('example.com:4242'))->will($this->returnValue($deferred->promise()));
         $this->factory->createClient('example.com');
     }
 
     public function testPassHostnameAndPortToConnector()
     {
         $deferred = new Deferred();
-        $this->connector->expects($this->once())->method('create')->with($this->equalTo('example.com', 1234))->will($this->returnValue($deferred->promise()));
+        $this->connector->expects($this->once())->method('connect')->with($this->equalTo('example.com:1234'))->will($this->returnValue($deferred->promise()));
         $this->factory->createClient('example.com:1234');
     }
 
     public function testInvalidUriWillRejectWithoutConnecting()
     {
-        $this->connector->expects($this->never())->method('create');
+        $this->connector->expects($this->never())->method('connect');
 
         $this->expectPromiseReject($this->factory->createClient('///'));
     }
 
     public function testInvalidSchemeWillRejectWithoutConnecting()
     {
-        $this->connector->expects($this->never())->method('create');
+        $this->connector->expects($this->never())->method('connect');
 
         $this->expectPromiseReject($this->factory->createClient('https://example.com:1234/'));
     }
 
     public function testWillInvokeProberAfterConnecting()
     {
-        $stream = $this->getMockBuilder('React\Stream\Stream')->disableOriginalConstructor()->getMock();
+        $stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
 
-        $this->connector->expects($this->once())->method('create')->will($this->returnValue(Promise\resolve($stream)));
+        $this->connector->expects($this->once())->method('connect')->will($this->returnValue(Promise\resolve($stream)));
         $this->prober->expects($this->once())->method('probe')->with($this->equalTo($stream))->will($this->returnValue(Promise\resolve(Protocol::TYPE_DATASTREAM)));
 
         $this->expectPromiseResolve($this->factory->createClient('localhost'));
@@ -61,9 +61,9 @@ class FactoryTest extends TestCase
 
     public function testWillNotInvokeProberIfSchemeIsProtocol()
     {
-        $stream = $this->getMockBuilder('React\Stream\Stream')->disableOriginalConstructor()->getMock();
+        $stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
 
-        $this->connector->expects($this->once())->method('create')->will($this->returnValue(Promise\resolve($stream)));
+        $this->connector->expects($this->once())->method('connect')->will($this->returnValue(Promise\resolve($stream)));
         $this->prober->expects($this->never())->method('probe');
 
         $this->expectPromiseResolve($this->factory->createClient('legacy://localhost'));

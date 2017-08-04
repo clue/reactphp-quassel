@@ -2,26 +2,22 @@
 
 namespace Clue\React\Quassel;
 
-use React\SocketClient\ConnectorInterface;
-use React\Stream\Stream;
-use Clue\React\Quassel\Io\Handshaker;
 use Clue\React\Quassel\Io\Prober;
-use React\EventLoop\LoopInterface;
-use React\Dns\Resolver\Factory as ResolverFactory;
-use React\SocketClient\Connector;
 use Clue\React\Quassel\Io\Protocol;
+use React\EventLoop\LoopInterface;
 use React\Promise;
+use React\SocketClient\ConnectorInterface;
+use React\SocketClient\Connector;
+use React\Stream\DuplexStreamInterface;
 use InvalidArgumentException;
 
 class Factory
 {
     public function __construct(LoopInterface $loop, ConnectorInterface $connector = null, Prober $prober = null)
     {
-    	if ($connector === null) {
-    		$resolverFactory = new ResolverFactory();
-    		$resolver = $resolverFactory->create('8.8.8.8', $loop);
-    		$connector = new Connector($loop, $resolver);
-    	}
+        if ($connector === null) {
+            $connector = new Connector($loop);
+        }
         if ($prober === null) {
             $prober = new Prober();
         }
@@ -53,14 +49,14 @@ class Factory
             }
         }
 
-        $promise = $this->connector->create($parts['host'], $parts['port']);
+        $promise = $this->connector->connect($parts['host'] . ':' . $parts['port']);
 
         // protocol probe not already set
         if ($probe === 0) {
             $connector = $this->connector;
             $prober = $this->prober;
 
-            $promise = $promise->then(function (Stream $stream) use ($prober, &$probe, $connector, $parts) {
+            $promise = $promise->then(function (DuplexStreamInterface $stream) use ($prober, &$probe, $connector, $parts) {
                 return $prober->probe($stream)->then(
                     function ($ret) use (&$probe, $stream) {
                         // probe returned successfully, create new client for this stream
@@ -73,7 +69,7 @@ class Factory
                         if ($e->getCode() === Prober::ERROR_CLOSED) {
                             // legacy servers will terminate connection while probing
                             // let's just open a new connection and assume default probe
-                            return $connector->create($parts['host'], $parts['port']);
+                            return $connector->connect($parts['host'] . ':' . $parts['port']);
                         }
                         throw $e;
                     }
@@ -82,7 +78,7 @@ class Factory
         }
 
         return $promise->then(
-            function (Stream $stream) use (&$probe) {
+            function (DuplexStreamInterface $stream) use (&$probe) {
                 return new Client($stream, Protocol::createFromProbe($probe));
             }
         );

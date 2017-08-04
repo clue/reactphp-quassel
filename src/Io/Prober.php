@@ -2,7 +2,7 @@
 
 namespace Clue\React\Quassel\Io;
 
-use React\Stream\Stream;
+use React\Stream\DuplexStreamInterface;
 use React\Promise\Deferred;
 
 class Prober
@@ -20,7 +20,7 @@ class Prober
         $this->binary = $binary;
     }
 
-    public function probe(Stream $stream, $compression = false, $encryption = false)
+    public function probe(DuplexStreamInterface $stream, $compression = false, $encryption = false)
     {
         $magic = Protocol::MAGIC;
         if ($compression) {
