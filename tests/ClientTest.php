@@ -4,12 +4,13 @@ use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
+use React\Stream\ThroughStream;
 
 class ClientTest extends TestCase
 {
     public function setUp()
     {
-        $this->stream = $this->getMockBuilder('React\Stream\Stream')->disableOriginalConstructor()->setMethods(array('write', 'end', 'close', 'pause', 'resume', 'isReadable', 'isWritable'))->getMock();
+        $this->stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
         $this->protocol = $this->getMockBuilder('Clue\React\Quassel\Io\Protocol')->disableOriginalConstructor()->getMock();
         $this->splitter = $this->getMockBuilder('Clue\React\Quassel\Io\PacketSplitter')->disableOriginalConstructor()->getMock();
 
@@ -61,34 +62,49 @@ class ClientTest extends TestCase
 
     public function testCloseEventWillBeForwarded()
     {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
         $this->client->on('close', $this->expectCallableOnce());
         $this->stream->emit('close');
     }
 
     public function testDrainEventWillBeForwarded()
     {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
         $this->client->on('drain', $this->expectCallableOnce());
         $this->stream->emit('drain');
     }
 
     public function testEndEventWillBeForwardedAndClose()
     {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
         $this->client->on('end', $this->expectCallableOnce());
-        $this->stream->expects($this->once())->method('close');
-        $this->stream->emit('end');
+        $this->stream->on('close', $this->expectCallableOnce());
+        $this->stream->end();
     }
 
     public function testErrorEventWillBeForwardedAndClose()
     {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
         $e = new \RuntimeException();
 
         $this->client->on('error', $this->expectCallableOnceWith($e));
-        $this->stream->expects($this->once())->method('close');
+        $this->stream->on('close', $this->expectCallableOnce());
         $this->stream->emit('error', array($e));
     }
 
     public function testDataEventWillNotBeForwardedIfItIsAnIncompletePacket()
     {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
         $this->splitter->expects($this->once())->method('push')->with("hello", array($this->client, 'handlePacket'));
         $this->client->on('data', $this->expectCallableNever());
 
