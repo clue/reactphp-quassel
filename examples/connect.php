@@ -127,9 +127,9 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
 
     $client->writeClientInit();
 
-    $client->on('close', function () use (&$timer) {
+    $client->on('close', function () use (&$timer, $loop) {
         var_dump('CLOSED');
-        $timer->cancel();
+        $loop->cancelTimer($timer);
     });
 
     $timer = $loop->addTimer(60.0 * 60, function ($timer) use ($client) {
