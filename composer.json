@@ -1,6 +1,6 @@
 {
     "name": "clue/quassel-react",
-    "description": "Simple streaming, event-driven access to your Quassel IRC core",
+    "description": "Simple streaming, event-driven access to your Quassel IRC core, built on top of ReactPHP",
     "keywords": ["Quassel", "IRC", "ReactPHP", "async"],
     "homepage": "https://github.com/clue/php-quassel-react",
     "license": "MIT",

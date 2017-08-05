@@ -1,7 +1,7 @@
 # clue/quassel-react [![Build Status](https://travis-ci.org/clue/php-quassel-react.svg?branch=master)](https://travis-ci.org/clue/php-quassel-react)
 
 Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
-built on top of [React PHP](http://reactphp.org/).
+built on top of [ReactPHP](http://reactphp.org/).
 
 This is a low-level networking library which can be used to communicate with your Quassel IRC core.
 
@@ -19,8 +19,6 @@ This is a low-level networking library which can be used to communicate with you
 * [Install](#install)
 * [Tests](#tests)
 * [License](#license)
-
-> Note: This project is in beta stage! Feel free to report any issues you encounter.
 
 ## Quickstart example
 
@@ -144,7 +142,7 @@ The recommended way to install this library is [through Composer](http://getcomp
 This will install the latest supported version:
 
 ```bash
-$ composer require clue/quassel-react: ^0.4
+$ composer require clue/quassel-react: ^0.5
 ```
 
 See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.
