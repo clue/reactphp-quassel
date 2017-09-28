@@ -21,7 +21,7 @@ class DatastreamProtocol extends Protocol
             throw new InvalidArgumentException('List MUST start with an integer value in order to distinguish from map encoding');
         }
 
-        $writer = new Writer(null, $this->types, $this->userTypeWriter);
+        $writer = new Writer($this->userTypeWriter);
 
         // datastream protocol just uses list contents
         $writer->writeQVariantList($list);
@@ -31,7 +31,7 @@ class DatastreamProtocol extends Protocol
 
     public function writeVariantMap(array $map)
     {
-        $writer = new Writer(null, $this->types);
+        $writer = new Writer();
 
         // datastream protocol just uses list contents with UTF-8 keys
         // the list always starts with a key string, which can be used to tell apart from actual list contents
@@ -43,7 +43,7 @@ class DatastreamProtocol extends Protocol
 
     public function readVariant($packet)
     {
-        $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
+        $reader = new Reader($packet, $this->userTypeReader);
 
         // datastrema protocol always uses list contents (even for maps)
         $value = $reader->readQVariantList();

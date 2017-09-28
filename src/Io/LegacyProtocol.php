@@ -14,7 +14,7 @@ class LegacyProtocol extends Protocol
 
     public function writeVariantList(array $list)
     {
-        $writer = new Writer(null, $this->types, $this->userTypeWriter);
+        $writer = new Writer($this->userTypeWriter);
 
         // legacy protocols prefixes list with type information
         $writer->writeQVariant($list);
@@ -24,7 +24,7 @@ class LegacyProtocol extends Protocol
 
     public function writeVariantMap(array $map)
     {
-        $writer = new Writer(null, $this->types);
+        $writer = new Writer();
 
         // legacy protocol prefixes map with type information
         $writer->writeQVariant($map);
@@ -34,7 +34,7 @@ class LegacyProtocol extends Protocol
 
     public function readVariant($packet)
     {
-        $reader = Reader::fromString($packet, $this->types, $this->userTypeReader);
+        $reader = new Reader($packet, $this->userTypeReader);
 
         // legacy protcol always uses type prefix, so just read as variant
         $q = $reader->readQVariant();

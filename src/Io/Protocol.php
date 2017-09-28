@@ -3,7 +3,6 @@
 namespace Clue\React\Quassel\Io;
 
 use Clue\QDataStream\Writer;
-use Clue\QDataStream\Types;
 use Clue\QDataStream\Reader;
 
 abstract class Protocol
@@ -30,7 +29,6 @@ abstract class Protocol
     const REQUEST_HEARTBEATREPLY = 6;
 
     protected $binary;
-    protected $types;
     protected $userTypeReader;
     protected $userTypeWriter;
 
@@ -46,7 +44,6 @@ abstract class Protocol
     public function __construct(Binary $binary)
     {
         $this->binary = $binary;
-        $this->types = new Types();
 
         $this->userTypeReader = array(
             // All required by SessionInit
