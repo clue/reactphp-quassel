@@ -22,7 +22,7 @@ class DatastreamProtocolTest extends AbstractProtocolTest
      */
     public function testCanNotTransportListStartingWithString()
     {
-        $this->protocol->writeVariantList(array('does', 'not', 'work'));
+        $this->protocol->serializeVariantPacket(array('does', 'not', 'work'));
     }
 
     public function testInitDataWireFormatWillBeRepresentedLikeLegacyProtocol()
@@ -33,7 +33,7 @@ class DatastreamProtocolTest extends AbstractProtocolTest
         // the actual message interpretation (in line with legacy protocol wire format)
         $expected = array(Protocol::REQUEST_INITDATA, 'Network', '1', array('k1' => 'v1', 'k2' => 'v2'));
 
-        $this->assertEquals($expected, $this->protocol->readVariant($this->protocol->writeVariantList($message)));
+        $this->assertEquals($expected, $this->protocol->parseVariantPacket($this->protocol->serializeVariantPacket($message)));
     }
 
     public function testReceiveHeartBeatRequestWithCorrectTimeZone()
@@ -48,7 +48,7 @@ class DatastreamProtocolTest extends AbstractProtocolTest
 
         $packet = (string)$writer;
 
-        $values = $this->protocol->readVariant($packet);
+        $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(2, $values);
         $this->assertEquals(Protocol::REQUEST_HEARTBEAT, $values[0]);

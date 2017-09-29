@@ -15,37 +15,31 @@ class DatastreamProtocol extends Protocol
         return false;
     }
 
-    public function writeVariantList(array $list)
+    public function serializeVariantPacket(array $data)
     {
-        if (isset($list[0]) && !is_integer($list[0])) {
+        if (isset($data[0]) && !is_integer($data[0])) {
             throw new InvalidArgumentException('List MUST start with an integer value in order to distinguish from map encoding');
         }
 
-        $writer = new Writer($this->userTypeWriter);
-
-        // datastream protocol just uses list contents
-        $writer->writeQVariantList($list);
-
-        return (string)$writer;
-    }
-
-    public function writeVariantMap(array $map)
-    {
-        $writer = new Writer();
-
-        // datastream protocol just uses list contents with UTF-8 keys
+        // datastream protocol transports maps as list contents with UTF-8 keys
         // the list always starts with a key string, which can be used to tell apart from actual list contents
         // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L80
-        $writer->writeQVariantList($this->mapToList($map));
+        if (!isset($data[0])) {
+            $data = $this->mapToList($data);
+        }
+
+        // datastream protocol always uses list contents without variant prefix
+        $writer = new Writer($this->userTypeWriter);
+        $writer->writeQVariantList($data);
 
         return (string)$writer;
     }
 
-    public function readVariant($packet)
+    public function parseVariantPacket($packet)
     {
         $reader = new Reader($packet, $this->userTypeReader);
 
-        // datastrema protocol always uses list contents (even for maps)
+        // datastream protocol always uses list contents (even for maps)
         $value = $reader->readQVariantList();
 
         // if the first element is a string, then this is actually a map transported as a list

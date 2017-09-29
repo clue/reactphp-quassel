@@ -34,7 +34,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
 
         $packet = (string)$writer;
 
-        $values = $this->protocol->readVariant($packet);
+        $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(2, $values);
         $this->assertEquals(Protocol::REQUEST_HEARTBEAT, $values[0]);
@@ -53,7 +53,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
 
         $packet = (string)$writer;
 
-        $values = $this->protocol->readVariant($packet);
+        $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(2, $values);
         $this->assertEquals(Protocol::REQUEST_HEARTBEAT, $values[0]);
@@ -72,7 +72,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
 
         $packet = (string)$writer;
 
-        $values = $this->protocol->readVariant($packet);
+        $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(2, $values);
         $this->assertEquals(Protocol::REQUEST_HEARTBEATREPLY, $values[0]);

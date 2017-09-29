@@ -12,27 +12,16 @@ class LegacyProtocol extends Protocol
         return true;
     }
 
-    public function writeVariantList(array $list)
+    public function serializeVariantPacket(array $data)
     {
+        // legacy protocol prefixes both list and map with variant information
         $writer = new Writer($this->userTypeWriter);
-
-        // legacy protocols prefixes list with type information
-        $writer->writeQVariant($list);
+        $writer->writeQVariant($data);
 
         return (string)$writer;
     }
 
-    public function writeVariantMap(array $map)
-    {
-        $writer = new Writer();
-
-        // legacy protocol prefixes map with type information
-        $writer->writeQVariant($map);
-
-        return (string)$writer;
-    }
-
-    public function readVariant($packet)
+    public function parseVariantPacket($packet)
     {
         $reader = new Reader($packet, $this->userTypeReader);
 

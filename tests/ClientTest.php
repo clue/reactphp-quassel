@@ -113,7 +113,7 @@ class ClientTest extends TestCase
 
     public function testDataEventWillBeForwardedFromSplitterThroughProtocolParser()
     {
-        $this->protocol->expects($this->once())->method('readVariant')->with('hello')->willReturn('parsed');
+        $this->protocol->expects($this->once())->method('parseVariantPacket')->with('hello')->willReturn('parsed');
         $this->client->on('data', $this->expectCallableOnceWith('parsed'));
 
         $this->client->handlePacket('hello');
@@ -169,7 +169,7 @@ class ClientTest extends TestCase
         $dt = new \DateTime();
 
         $this->protocol->expects($this->any())->method('isLegacy')->willReturn(true);
-        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
+        $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
             Protocol::REQUEST_HEARTBEAT,
             new QVariant($dt, Types::TYPE_QTIME)
         ));
@@ -183,7 +183,7 @@ class ClientTest extends TestCase
         $dt = new \DateTime();
 
         $this->protocol->expects($this->any())->method('isLegacy')->willReturn(false);
-        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
+        $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
             Protocol::REQUEST_HEARTBEAT,
             new QVariant($dt, Types::TYPE_QDATETIME)
         ));
@@ -194,7 +194,7 @@ class ClientTest extends TestCase
 
     private function expectWriteMap()
     {
-        $this->protocol->expects($this->once())->method('writeVariantMap');
+        $this->protocol->expects($this->once())->method('serializeVariantPacket');
         $this->splitter->expects($this->once())->method('writePacket');
         $this->stream->expects($this->once())->method('write');
     }

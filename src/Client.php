@@ -283,13 +283,11 @@ class Client extends EventEmitter implements DuplexStreamInterface
      */
     public function write($data)
     {
-        if (isset($data[0])) {
-            $packet = $this->protocol->writeVariantList($data);
-        } else {
-            $packet = $this->protocol->writeVariantMap($data);
-        }
-
-        return $this->stream->write($this->splitter->writePacket($packet));
+        return $this->stream->write(
+            $this->splitter->writePacket(
+                $this->protocol->serializeVariantPacket($data)
+            )
+        );
     }
 
     public function end($data = null)
@@ -313,9 +311,8 @@ class Client extends EventEmitter implements DuplexStreamInterface
     public function handlePacket($packet)
     {
         // complete packet data received
-        // read variant from packet data and forward as message
-        $data = $this->protocol->readVariant($packet);
-        $this->emit('data', array($data));
+        // parse variant data from binary packet and forward as data event
+        $this->emit('data', array($this->protocol->parseVariantPacket($packet)));
     }
 
     /** @internal */
