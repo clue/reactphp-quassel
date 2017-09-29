@@ -142,7 +142,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         return $this->write(array(
             Protocol::REQUEST_HEARTBEAT,
-            $this->createQVariantDateTime($dt)
+            $dt
         ));
     }
 
@@ -150,7 +150,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         return $this->write(array(
             Protocol::REQUEST_HEARTBEATREPLY,
-            $this->createQVariantDateTime($dt)
+            $dt
         ));
     }
 
@@ -344,19 +344,5 @@ class Client extends EventEmitter implements DuplexStreamInterface
     public function handleDrain()
     {
         $this->emit('drain');
-    }
-
-    private function createQVariantDateTime(\DateTime $dt)
-    {
-        // The legacy protocol uses QTime which does not obey timezones or DST
-        // properties. Instead, convert everything to UTC so we send absolute
-        // timestamps irrespective of actual timezone.
-        if ($this->protocol->isLegacy()) {
-            $dt = clone $dt;
-            $dt->setTimeZone(new \DateTimeZone('UTC'));
-        }
-
-        // legacy protocol uses limited QTime while newer datagram protocol uses proper QDateTime
-        return new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME);
     }
 }

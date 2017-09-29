@@ -161,31 +161,22 @@ class ClientTest extends TestCase
     {
         $dt = new \DateTime();
 
-        $this->client->writeHeartBeatRequest($dt);
-    }
-
-    public function testWriteHeartBeatReplyLegacyAsQTime()
-    {
-        $dt = new \DateTime();
-
-        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(true);
         $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
-            Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, Types::TYPE_QTIME)
+            Protocol::REQUEST_HEARTBEATREPLY,
+            $dt
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->writeHeartBeatRequest($dt);
+        $this->client->writeHeartBeatReply($dt);
     }
 
-    public function testWriteHeartBeatReplyNonLegacyAsQDateTime()
+    public function testWriteHeartBeatReply()
     {
         $dt = new \DateTime();
 
-        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(false);
         $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
             Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, Types::TYPE_QDATETIME)
+            $dt
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 

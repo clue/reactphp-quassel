@@ -25,6 +25,17 @@ abstract class AbstractProtocolTest extends TestCase
         $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
     }
 
+    public function testHeartBeatWithCorrectTimeZoneAndMillisecondAccuracy()
+    {
+        date_default_timezone_set('Europe/Berlin');
+
+        $in = array(Protocol::REQUEST_HEARTBEAT, new DateTime('12:34:56.789'));
+
+        $packet = $this->protocol->serializeVariantPacket($in);
+
+        $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
+    }
+
     public function testUserTypeBufferId()
     {
         $packet = $this->protocol->serializeVariantPacket(array(
