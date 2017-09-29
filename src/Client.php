@@ -2,15 +2,14 @@
 
 namespace Clue\React\Quassel;
 
-use Clue\React\Quassel\Io\Protocol;
-use Clue\React\Quassel\Io\PacketSplitter;
-use Clue\React\Quassel\Io\Binary;
-use Evenement\EventEmitter;
-use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
-use React\Stream\WritableStreamInterface;
-use React\Stream\Util;
+use Clue\QDataStream\Types;
+use Clue\React\Quassel\Io\PacketSplitter;
+use Clue\React\Quassel\Io\Protocol;
+use Evenement\EventEmitter;
 use React\Stream\DuplexStreamInterface;
+use React\Stream\Util;
+use React\Stream\WritableStreamInterface;
 
 class Client extends EventEmitter implements DuplexStreamInterface
 {
@@ -18,13 +17,18 @@ class Client extends EventEmitter implements DuplexStreamInterface
     private $protocol;
     private $splitter;
 
+    /**
+     * [internal] Constructor, see Factory instead
+     * @internal
+     * @see Factory
+     */
     public function __construct(DuplexStreamInterface $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {
             $protocol = Protocol::createFromProbe(0);
         }
         if ($splitter === null) {
-            $splitter = new PacketSplitter(new Binary());
+            $splitter = new PacketSplitter();
         }
 
         $this->stream = $stream;
@@ -137,7 +141,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         return $this->write(array(
             Protocol::REQUEST_HEARTBEAT,
-            $this->createQVariantDateTime($dt)
+            $dt
         ));
     }
 
@@ -145,7 +149,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         return $this->write(array(
             Protocol::REQUEST_HEARTBEATREPLY,
-            $this->createQVariantDateTime($dt)
+            $dt
         ));
     }
 
@@ -283,13 +287,11 @@ class Client extends EventEmitter implements DuplexStreamInterface
      */
     public function write($data)
     {
-        if (isset($data[0])) {
-            $packet = $this->protocol->writeVariantList($data);
-        } else {
-            $packet = $this->protocol->writeVariantMap($data);
-        }
-
-        return $this->stream->write($this->splitter->writePacket($packet));
+        return $this->stream->write(
+            $this->splitter->writePacket(
+                $this->protocol->serializeVariantPacket($data)
+            )
+        );
     }
 
     public function end($data = null)
@@ -313,9 +315,8 @@ class Client extends EventEmitter implements DuplexStreamInterface
     public function handlePacket($packet)
     {
         // complete packet data received
-        // read variant from packet data and forward as message
-        $data = $this->protocol->readVariant($packet);
-        $this->emit('data', array($data));
+        // parse variant data from binary packet and forward as data event
+        $this->emit('data', array($this->protocol->parseVariantPacket($packet)));
     }
 
     /** @internal */
@@ -342,19 +343,5 @@ class Client extends EventEmitter implements DuplexStreamInterface
     public function handleDrain()
     {
         $this->emit('drain');
-    }
-
-    private function createQVariantDateTime(\DateTime $dt)
-    {
-        // The legacy protocol uses QTime which does not obey timezones or DST
-        // properties. Instead, convert everything to UTC so we send absolute
-        // timestamps irrespective of actual timezone.
-        if ($this->protocol->isLegacy()) {
-            $dt = clone $dt;
-            $dt->setTimeZone(new \DateTimeZone('UTC'));
-        }
-
-        // legacy protocol uses limited QTime while newer datagram protocol uses proper QDateTime
-        return new QVariant($dt, $this->protocol->isLegacy() ? Types::TYPE_QTIME : Types::TYPE_QDATETIME);
     }
 }

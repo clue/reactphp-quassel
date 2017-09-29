@@ -4,15 +4,10 @@ namespace Clue\React\Quassel\Io;
 
 use Clue\React\Quassel\Io\Binary;
 
+/** @internal */
 class PacketSplitter
 {
     private $buffer = '';
-    private $binary;
-
-    public function __construct(Binary $binary)
-    {
-        $this->binary = $binary;
-    }
 
     public function push($chunk, $fn)
     {
@@ -20,7 +15,7 @@ class PacketSplitter
 
         while (isset($this->buffer[3])) {
             // buffer contains at least packet length
-            $length = $this->binary->readUInt32(substr($this->buffer, 0, 4));
+            $length = Binary::readUInt32(substr($this->buffer, 0, 4));
 
             // buffer contains last byte of packet
             if (!isset($this->buffer[3 + $length])) {
@@ -49,6 +44,6 @@ class PacketSplitter
 
         // raw data is prefixed with length, then written
         // https://github.com/quassel/quassel/blob/master/src/common/remotepeer.cpp#L241
-        return $this->binary->writeUInt32(strlen($packet)) . $packet;
+        return Binary::writeUInt32(strlen($packet)) . $packet;
     }
 }

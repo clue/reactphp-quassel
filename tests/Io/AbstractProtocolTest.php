@@ -1,9 +1,6 @@
 <?php
 
 use Clue\React\Quassel\Io\Protocol;
-use Clue\React\Quassel\Io\Binary;
-use Clue\React\Quassel\Io\PacketParser;
-use Clue\QDataStream\Reader;
 use Clue\QDataStream\QVariant;
 
 abstract class AbstractProtocolTest extends TestCase
@@ -14,28 +11,39 @@ abstract class AbstractProtocolTest extends TestCase
     {
         $in = array(1, 'first', 'second', 10, false);
 
-        $packet = $this->protocol->writeVariantList($in);
+        $packet = $this->protocol->serializeVariantPacket($in);
 
-        $this->assertEquals($in, $this->protocol->readVariant($packet));
+        $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
     }
 
     public function testVariantMap()
     {
         $in = array('hello' => 'world', 'number' => 10, 'boolean' => true);
 
-        $packet = $this->protocol->writeVariantMap($in);
+        $packet = $this->protocol->serializeVariantPacket($in);
 
-        $this->assertEquals($in, $this->protocol->readVariant($packet));
+        $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
+    }
+
+    public function testHeartBeatWithCorrectTimeZoneAndMillisecondAccuracy()
+    {
+        date_default_timezone_set('Europe/Berlin');
+
+        $in = array(Protocol::REQUEST_HEARTBEAT, new DateTime('12:34:56.789'));
+
+        $packet = $this->protocol->serializeVariantPacket($in);
+
+        $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
     }
 
     public function testUserTypeBufferId()
     {
-        $packet = $this->protocol->writeVariantList(array(
+        $packet = $this->protocol->serializeVariantPacket(array(
             1000,
             new QVariant(10, 'BufferId')
         ));
 
-        $out = $this->protocol->readVariant($packet);
+        $out = $this->protocol->parseVariantPacket($packet);
 
         $this->assertEquals(array(1000, 10), $out);
     }

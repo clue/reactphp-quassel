@@ -1,7 +1,6 @@
 <?php
 
 use Clue\React\Quassel\Io\PacketSplitter;
-use Clue\React\Quassel\Io\Binary;
 
 class PacketSplitterTest extends TestCase
 {
@@ -9,7 +8,7 @@ class PacketSplitterTest extends TestCase
 
     public function setUp()
     {
-        $this->splitter = new PacketSplitter(new Binary());
+        $this->splitter = new PacketSplitter();
     }
 
     public function testWillEmitOnceCompletePacketIsWritten()

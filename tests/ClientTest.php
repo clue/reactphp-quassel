@@ -2,8 +2,6 @@
 
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
-use Clue\QDataStream\QVariant;
-use Clue\QDataStream\Types;
 use React\Stream\ThroughStream;
 
 class ClientTest extends TestCase
@@ -113,7 +111,7 @@ class ClientTest extends TestCase
 
     public function testDataEventWillBeForwardedFromSplitterThroughProtocolParser()
     {
-        $this->protocol->expects($this->once())->method('readVariant')->with('hello')->willReturn('parsed');
+        $this->protocol->expects($this->once())->method('parseVariantPacket')->with('hello')->willReturn('parsed');
         $this->client->on('data', $this->expectCallableOnceWith('parsed'));
 
         $this->client->handlePacket('hello');
@@ -161,31 +159,22 @@ class ClientTest extends TestCase
     {
         $dt = new \DateTime();
 
-        $this->client->writeHeartBeatRequest($dt);
-    }
-
-    public function testWriteHeartBeatReplyLegacyAsQTime()
-    {
-        $dt = new \DateTime();
-
-        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(true);
-        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
-            Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, Types::TYPE_QTIME)
+        $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
+            Protocol::REQUEST_HEARTBEATREPLY,
+            $dt
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
-        $this->client->writeHeartBeatRequest($dt);
+        $this->client->writeHeartBeatReply($dt);
     }
 
-    public function testWriteHeartBeatReplyNonLegacyAsQDateTime()
+    public function testWriteHeartBeatReply()
     {
         $dt = new \DateTime();
 
-        $this->protocol->expects($this->any())->method('isLegacy')->willReturn(false);
-        $this->protocol->expects($this->once())->method('writeVariantList')->with(array(
+        $this->protocol->expects($this->once())->method('serializeVariantPacket')->with(array(
             Protocol::REQUEST_HEARTBEAT,
-            new QVariant($dt, Types::TYPE_QDATETIME)
+            $dt
         ));
         $this->splitter->expects($this->once())->method('writePacket');
 
@@ -194,7 +183,7 @@ class ClientTest extends TestCase
 
     private function expectWriteMap()
     {
-        $this->protocol->expects($this->once())->method('writeVariantMap');
+        $this->protocol->expects($this->once())->method('serializeVariantPacket');
         $this->splitter->expects($this->once())->method('writePacket');
         $this->stream->expects($this->once())->method('write');
     }

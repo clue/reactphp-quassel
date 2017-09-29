@@ -5,20 +5,11 @@ namespace Clue\React\Quassel\Io;
 use React\Stream\DuplexStreamInterface;
 use React\Promise\Deferred;
 
+/** @internal */
 class Prober
 {
     const ERROR_PROTOCOL = 4;
     const ERROR_CLOSED = 3;
-
-    private $binary;
-
-    public function __construct(Binary $binary = null)
-    {
-        if ($binary === null) {
-            $binary = new Binary();
-        }
-        $this->binary = $binary;
-    }
 
     public function probe(DuplexStreamInterface $stream, $compression = false, $encryption = false)
     {
@@ -30,9 +21,7 @@ class Prober
             $magic |= Protocol::FEATURE_ENCRYPTION;
         }
 
-        $binary = $this->binary;
-
-        $stream->write($binary->writeUInt32($magic));
+        $stream->write(Binary::writeUInt32($magic));
 
         // list of supported protocol types (in order of preference)
         $types = array(Protocol::TYPE_DATASTREAM, Protocol::TYPE_LEGACY);
@@ -42,7 +31,7 @@ class Prober
         $types []= $last | Protocol::TYPELIST_END;
 
         foreach ($types as $type) {
-            $stream->write($binary->writeUInt32($type));
+            $stream->write(Binary::writeUInt32($type));
         }
 
         $deferred = new Deferred(function ($resolve, $reject) use ($stream) {
@@ -50,7 +39,7 @@ class Prober
         });
 
         $buffer = '';
-        $fn = function ($data) use (&$buffer, &$fn, $stream, $deferred, $binary) {
+        $fn = function ($data) use (&$buffer, &$fn, $stream, $deferred) {
             $buffer .= $data;
 
             if (isset($buffer[4])) {
@@ -61,7 +50,7 @@ class Prober
 
             if (isset($buffer[3])) {
                 $stream->removeListener('data', $fn);
-                $deferred->resolve($binary->readUInt32($buffer));
+                $deferred->resolve(Binary::readUInt32($buffer));
             }
         };
         $stream->on('data', $fn);

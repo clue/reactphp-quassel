@@ -3,9 +3,9 @@
 namespace Clue\React\Quassel\Io;
 
 use Clue\QDataStream\Writer;
-use Clue\QDataStream\Types;
 use Clue\QDataStream\Reader;
 
+/** @internal */
 abstract class Protocol
 {
     // https://github.com/quassel/quassel/blob/8e2f578b3d83d2dd7b6f2ea64d350693073ffed1/src/common/protocol.h#L30
@@ -29,25 +29,20 @@ abstract class Protocol
     const REQUEST_HEARTBEAT = 5;
     const REQUEST_HEARTBEATREPLY = 6;
 
-    protected $binary;
-    protected $types;
     protected $userTypeReader;
     protected $userTypeWriter;
 
     public static function createFromProbe($probe)
     {
         if ($probe & self::TYPE_DATASTREAM) {
-            return new DatastreamProtocol(new Binary());
+            return new DatastreamProtocol();
         } else {
-            return new LegacyProtocol(new Binary());
+            return new LegacyProtocol();
         }
     }
 
-    public function __construct(Binary $binary)
+    public function __construct()
     {
-        $this->binary = $binary;
-        $this->types = new Types();
-
         $this->userTypeReader = array(
             // All required by SessionInit
             'NetworkId' => function (Reader $reader) {
@@ -123,26 +118,18 @@ abstract class Protocol
     abstract public function isLegacy();
 
     /**
-     * encode the given list of values
+     * encode the given list of values or map of key/value pairs to a binary packet
      *
-     * @param mixed[]|array<mixed> $list
+     * @param mixed[]|array<mixed> $data
      * @return string binary packet contents
      */
-    abstract public function writeVariantList(array $list);
-
-    /**
-     * encode the given map of key/value-pairs
-     *
-     * @param mixed[]|array<mixed> $map
-     * @return string binary packet contents
-     */
-    abstract public function writeVariantMap(array $map);
+    abstract public function serializeVariantPacket(array $data);
 
     /**
      * decodes the given packet contents and returns its representation in PHP
      *
-     * @param string $packet bianry packet contents
+     * @param string $packet binary packet contents
      * @return mixed[]|array<mixed> list of values or map of key/value-pairs
      */
-    abstract public function readVariant($packet);
+    abstract public function parseVariantPacket($packet);
 }
