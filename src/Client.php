@@ -2,15 +2,14 @@
 
 namespace Clue\React\Quassel;
 
-use Clue\React\Quassel\Io\Protocol;
-use Clue\React\Quassel\Io\PacketSplitter;
-use Clue\React\Quassel\Io\Binary;
-use Evenement\EventEmitter;
-use Clue\QDataStream\Types;
 use Clue\QDataStream\QVariant;
-use React\Stream\WritableStreamInterface;
-use React\Stream\Util;
+use Clue\QDataStream\Types;
+use Clue\React\Quassel\Io\PacketSplitter;
+use Clue\React\Quassel\Io\Protocol;
+use Evenement\EventEmitter;
 use React\Stream\DuplexStreamInterface;
+use React\Stream\Util;
+use React\Stream\WritableStreamInterface;
 
 class Client extends EventEmitter implements DuplexStreamInterface
 {
@@ -29,7 +28,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
             $protocol = Protocol::createFromProbe(0);
         }
         if ($splitter === null) {
-            $splitter = new PacketSplitter(new Binary());
+            $splitter = new PacketSplitter();
         }
 
         $this->stream = $stream;

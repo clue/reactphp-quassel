@@ -2,8 +2,6 @@
 
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
-use Clue\QDataStream\QVariant;
-use Clue\QDataStream\Types;
 use React\Stream\ThroughStream;
 
 class ClientTest extends TestCase
