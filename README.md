@@ -130,6 +130,30 @@ $client->on('close', function () {
 });
 ```
 
+The `data` event will be forwarded with the PHP representation of whatever the
+remote Quassel IRC core sent to this client.
+From a consumer perspective this looks very similar to a parsed JSON structure,
+but this actually uses a binary wire format under the hood.
+This library exposes this parsed structure as-is and does usually not change
+anything about it.
+
+There are only few noticable exceptions to this rule:
+
+*   Incoming chat messages use a plain Unix timestamp integers, while all other
+    `data` events usually use `DateTime` objects.
+    This library always converts this to `DateTime` for consistency reasons.
+*   The legacy protocol uses plain times for heartbeat messages while the newer
+    datastream protocol uses `DateTime` objects.
+    This library always converts this to `DateTime` for consistency reasons.
+*   The legacy protocol uses excessive map structures for initial "Network"
+    synchronization, while the newer datastream protocol users optimized list
+    structures to avoid repeatedly sending the same keys.
+    This library always exposes the legacy protocol format in the same way as
+    the newer datastream protocol for consistency reasons.
+
+This combined basically means that you should always get consistent `data`
+events for both the legacy protocol and the newer datastream protocol.
+
 #### close()
 
 The `close()` method can be used to force-close the Quassel connection immediately.
