@@ -18,6 +18,11 @@ class Client extends EventEmitter implements DuplexStreamInterface
     private $protocol;
     private $splitter;
 
+    /**
+     * [internal] Constructor, see Factory instead
+     * @internal
+     * @see Factory
+     */
     public function __construct(DuplexStreamInterface $stream, Protocol $protocol = null, PacketSplitter $splitter = null)
     {
         if ($protocol === null) {

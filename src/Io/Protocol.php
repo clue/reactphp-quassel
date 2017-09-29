@@ -5,6 +5,7 @@ namespace Clue\React\Quassel\Io;
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Reader;
 
+/** @internal */
 abstract class Protocol
 {
     // https://github.com/quassel/quassel/blob/8e2f578b3d83d2dd7b6f2ea64d350693073ffed1/src/common/protocol.h#L30

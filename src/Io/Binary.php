@@ -2,6 +2,7 @@
 
 namespace Clue\React\Quassel\Io;
 
+/** @internal */
 class Binary
 {
     public function writeUInt32($num)

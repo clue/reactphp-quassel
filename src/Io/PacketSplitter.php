@@ -4,6 +4,7 @@ namespace Clue\React\Quassel\Io;
 
 use Clue\React\Quassel\Io\Binary;
 
+/** @internal */
 class PacketSplitter
 {
     private $buffer = '';

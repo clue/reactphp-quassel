@@ -8,6 +8,7 @@ use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
 use InvalidArgumentException;
 
+/** @internal */
 class DatastreamProtocol extends Protocol
 {
     public function isLegacy()

@@ -5,6 +5,7 @@ namespace Clue\React\Quassel\Io;
 use React\Stream\DuplexStreamInterface;
 use React\Promise\Deferred;
 
+/** @internal */
 class Prober
 {
     const ERROR_PROTOCOL = 4;

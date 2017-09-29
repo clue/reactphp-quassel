@@ -5,6 +5,7 @@ namespace Clue\React\Quassel\Io;
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Reader;
 
+/** @internal */
 class LegacyProtocol extends Protocol
 {
     public function isLegacy()
