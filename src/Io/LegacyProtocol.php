@@ -43,6 +43,30 @@ class LegacyProtocol extends Protocol
             $data[1]->modify($data[1]->getOffset() .  ' seconds');
         }
 
+        // upcast legacy InitData for "Network" to newer datagram variant
+        // https://github.com/quassel/quassel/commit/208ccb6d91ebb3c26a67c35c11411ba3ab27708a#diff-c3c5a4e63a0b757912ba28686747b040
+        if (isset($data[0]) && $data[0] === self::REQUEST_INITDATA && $data[1] === 'Network' && isset($data[3]['IrcUsersAndChannels'])) {
+            $new = array();
+            // $type would be "users" and "channels"
+            foreach ($data[3]['IrcUsersAndChannels'] as $type => $all) {
+                $map = array();
+
+                // iterate over all users/channels
+                foreach ($all as $one) {
+                    // iterate over all keys/values for this user/channel
+                    foreach ($one as $key => $value) {
+                        $map[$key][] = $value;
+                    }
+                }
+
+                // store new map with uppercase Users/Channels
+                $new[ucfirst($type)] = $map;
+            }
+
+            // make sure new structure comes first
+            $data[3] = array('IrcUsersAndChannels' => $new) + $data[3];
+        }
+
         return $data;
     }
 }

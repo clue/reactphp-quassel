@@ -17,6 +17,74 @@ class LegacyProtocolTest extends AbstractProtocolTest
         $this->assertTrue($this->protocol->isLegacy());
     }
 
+    public function testInitDataNetworkUnchangedWithEmptyUsersAndChannels()
+    {
+        $writer = new Writer();
+        $writer->writeQVariant(array(
+            Protocol::REQUEST_INITDATA,
+            'Network',
+            '1',
+            $data = array(
+                'a' => 1,
+                'IrcUsersAndChannels' => array(),
+                'b' => 2,
+            )
+        ));
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->parseVariantPacket($packet);
+
+        $this->assertCount(4, $values);
+        $this->assertCount(3, $values[3]);
+        $this->assertEquals($data, $values[3]);
+    }
+
+    public function testInitDataNetworkUpcastToNewDatastreamFormat()
+    {
+        $writer = new Writer();
+        $writer->writeQVariant(array(
+            Protocol::REQUEST_INITDATA,
+            'Network',
+            '1',
+            array(
+                'a' => 1,
+                'IrcUsersAndChannels' => array(
+                    'users' => array(
+                        'anything1' => array(
+                            'nick' => 'a',
+                            'here' => true
+                        ),
+                        'anything2' => array(
+                            'nick' => 'b',
+                            'here' => false
+                        )
+                    )
+                ),
+                'b' => 2,
+            )
+        ));
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->parseVariantPacket($packet);
+
+        $this->assertCount(4, $values);
+        $this->assertCount(3, $values[3]);
+
+        $expected = array('Users' => array(
+            'nick' => array(
+                'a',
+                'b'
+            ),
+            'here' => array(
+                true,
+                false
+            )
+        ));
+        $this->assertEquals($expected, $values[3]['IrcUsersAndChannels']);
+    }
+
     /**
      * The legacy protocol uses QTime which only transports time of the day and
      * not the actual day information. This means that reading in a QTime will
