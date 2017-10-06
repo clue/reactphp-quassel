@@ -3,7 +3,15 @@
 Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
 built on top of [ReactPHP](http://reactphp.org/).
 
-This is a low-level networking library which can be used to communicate with your Quassel IRC core.
+This is a lightweight and low-level networking library which can be used to
+communicate with your Quassel IRC core.
+It allows you to react to incoming events (such as an incoming message) and to
+perform new requests (such as sending an outgoing reply message).
+This can be used to build chatbots, export your channel backlog, list online
+users, forward backend events as a message to a channel and much more.
+Unlike conventional IRC chatbots, Quassel IRC allows re-using your existing
+identity and sharing it with both a person and a chatbot, so that an outside
+person has no idea about this and only sees a single contact.
 
 **Table of contents**
 
@@ -22,8 +30,9 @@ This is a low-level networking library which can be used to communicate with you
 
 ## Quickstart example
 
-See also the [examples](examples).
-
+The Quassel IRC protocol is not exactly trivial to explain and has some
+*interesting* message semantics. As such, it's highly recommended to check out
+the [examples](examples) to get started.
 
 ## Usage
 
