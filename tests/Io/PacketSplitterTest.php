@@ -25,4 +25,12 @@ class PacketSplitterTest extends TestCase
 
         $this->splitter->push($packet, $this->expectCallableOnce());
     }
+
+    /**
+     * @expectedException OverflowException
+     */
+    public function testWillThrowForHugePacket()
+    {
+        $this->splitter->push("\xFF\xFF\xFF\xFF", $this->expectCallableNever());
+    }
 }
