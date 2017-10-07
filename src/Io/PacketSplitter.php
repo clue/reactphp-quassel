@@ -9,6 +9,18 @@ class PacketSplitter
 {
     private $buffer = '';
 
+    /**
+     * maximum allowed size for a single incoming packet (16 MB)
+     *
+     * This help to avoid allocating excessive string buffers, as most packets
+     * are rather small (a few kilobytes). The biggest known package is a legacy
+     * SessionInit with ~1.4 MB for common networks, while the newer datastream
+     * protocol uses only ~0.6 MB for the same message.
+     *
+     * @var int
+     */
+    const MAX_SIZE = 16000000;
+
     public function push($chunk, $fn)
     {
         $this->buffer .= $chunk;
@@ -16,6 +28,9 @@ class PacketSplitter
         while (isset($this->buffer[3])) {
             // buffer contains at least packet length
             $length = Binary::readUInt32(substr($this->buffer, 0, 4));
+            if ($length > self::MAX_SIZE) {
+                throw new \OverflowException('Packet size of ' . $length . ' bytes exceeds maximum of ' . self::MAX_SIZE . ' bytes');
+            }
 
             // buffer contains last byte of packet
             if (!isset($this->buffer[3 + $length])) {

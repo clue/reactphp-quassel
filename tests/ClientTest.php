@@ -117,6 +117,19 @@ class ClientTest extends TestCase
         $this->client->handlePacket('hello');
     }
 
+    public function testDataEventWillEmitErrorAndCloseIfSizeExceeded()
+    {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
+        $this->splitter->expects($this->once())->method('push')->willThrowException(new OverflowException());
+        $this->client->on('data', $this->expectCallableNever());
+        $this->client->on('error', $this->expectCallableOnce());
+        $this->client->on('close', $this->expectCallableOnce());
+
+        $this->stream->emit('data', array("\xFF\xFF\xFF\xFF"));
+    }
+
     public function testWriteArrayWillWriteMap()
     {
         $this->expectWriteMap();

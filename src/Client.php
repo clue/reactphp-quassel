@@ -308,7 +308,11 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         // chunk of packet data received
         // feed chunk to splitter, which will invoke a callable for each complete packet
-        $this->splitter->push($chunk, array($this, 'handlePacket'));
+        try {
+            $this->splitter->push($chunk, array($this, 'handlePacket'));
+        } catch (\OverflowException $e) {
+            $this->handleError($e);
+        }
     }
 
     /** @internal */
