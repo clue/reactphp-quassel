@@ -44,6 +44,16 @@ class PacketSplitter
     }
 
     /**
+     * Checks whether there's any incomplete data in the incoming buffer
+     *
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return ($this->buffer === '');
+    }
+
+    /**
      * encode the given packet data to include framing (packet length)
      *
      * @param string $packet binary packet contents

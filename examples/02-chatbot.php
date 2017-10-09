@@ -90,6 +90,11 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user)
         }
     });
 
+    $client->on('error', 'printf');
+    $client->on('close', function () {
+        echo 'Connection closed' . PHP_EOL;
+    });
+
     $client->writeClientInit();
 })->then(null, function ($e) {
     echo $e;

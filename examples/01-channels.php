@@ -100,6 +100,11 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user)
         echo 'received unhandled: ' . json_encode($message, JSON_PRETTY_PRINT) . PHP_EOL;
     });
 
+    $client->on('error', 'printf');
+    $client->on('close', function () {
+        echo 'Connection closed' . PHP_EOL;
+    });
+
     $client->writeClientInit();
 })->then(null, function ($e) {
     echo $e;

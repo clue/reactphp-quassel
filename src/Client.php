@@ -326,8 +326,12 @@ class Client extends EventEmitter implements DuplexStreamInterface
     /** @internal */
     public function handleEnd()
     {
-        $this->emit('end');
-        $this->close();
+        if ($this->splitter->isEmpty()) {
+            $this->emit('end');
+            $this->close();
+        } else {
+            $this->handleError(new \RuntimeException('Connection ended while receiving data'));
+        }
     }
 
     /** @internal */
