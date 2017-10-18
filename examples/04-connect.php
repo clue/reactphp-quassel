@@ -125,17 +125,12 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
         echo 'received unhandled: ' . json_encode($message) . PHP_EOL;
     });
 
+    $client->on('error', 'printf');
+    $client->on('close', function () {
+        echo 'Connection closed' . PHP_EOL;
+    });
+
     $client->writeClientInit();
-
-    $client->on('close', function () use (&$timer, $loop) {
-        var_dump('CLOSED');
-        $loop->cancelTimer($timer);
-    });
-
-    $timer = $loop->addTimer(60.0 * 60, function ($timer) use ($client) {
-        var_dump('connection expired after ' . $timer->getInterval() . ' seconds');
-        $client->close();
-    });
 })->then(null, function ($e) {
     echo $e;
 });

@@ -27,6 +27,15 @@ class ClientTest extends TestCase
         $this->client->close();
     }
 
+    public function testClosingClientEmitsCloseEventAndRemovesListeners()
+    {
+        $this->client->on('close', $this->expectCallableOnce());
+        $this->assertCount(1, $this->client->listeners('close'));
+
+        $this->client->close();
+        $this->assertEquals(array(), $this->client->listeners('close'));
+    }
+
     public function testIsReadableWillReturnFromUnderlyingStream()
     {
         $this->stream->expects($this->once())->method('isReadable')->willReturn(true);
@@ -79,7 +88,7 @@ class ClientTest extends TestCase
     public function testEndEventWillBeForwardedAndClose()
     {
         $this->stream = new ThroughStream();
-        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+        $this->client = new Client($this->stream, $this->protocol);
 
         $this->client->on('end', $this->expectCallableOnce());
         $this->stream->on('close', $this->expectCallableOnce());
@@ -120,14 +129,27 @@ class ClientTest extends TestCase
     public function testDataEventWillEmitErrorAndCloseIfSizeExceeded()
     {
         $this->stream = new ThroughStream();
-        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+        $this->client = new Client($this->stream, $this->protocol);
 
-        $this->splitter->expects($this->once())->method('push')->willThrowException(new OverflowException());
         $this->client->on('data', $this->expectCallableNever());
         $this->client->on('error', $this->expectCallableOnce());
         $this->client->on('close', $this->expectCallableOnce());
 
         $this->stream->emit('data', array("\xFF\xFF\xFF\xFF"));
+    }
+
+    public function testEndEventWillEmitErrorIfDataIsBuffered()
+    {
+        $this->stream = new ThroughStream();
+        $this->client = new Client($this->stream, $this->protocol);
+
+        $this->client->on('data', $this->expectCallableNever());
+        $this->client->on('end', $this->expectCallableNever());
+        $this->client->on('error', $this->expectCallableOnce());
+        $this->client->on('close', $this->expectCallableOnce());
+
+        $this->stream->emit('data', array("\x00\x00"));
+        $this->stream->emit('end');
     }
 
     public function testWriteArrayWillWriteMap()
