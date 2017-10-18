@@ -16,6 +16,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
     private $stream;
     private $protocol;
     private $splitter;
+    private $closed = false;
 
     /**
      * [internal] Constructor, see Factory instead
@@ -38,7 +39,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
         $stream->on('data', array($this, 'handleData'));
         $stream->on('end', array($this, 'handleEnd'));
         $stream->on('error', array($this, 'handleError'));
-        $stream->on('close', array($this, 'handleClose'));
+        $stream->on('close', array($this, 'close'));
         $stream->on('drain', array($this, 'handleDrain'));
     }
 
@@ -244,11 +245,6 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
-    public function close()
-    {
-        $this->stream->close();
-    }
-
     public function isReadable()
     {
         return $this->stream->isReadable();
@@ -303,6 +299,19 @@ class Client extends EventEmitter implements DuplexStreamInterface
         $this->stream->end();
     }
 
+    public function close()
+    {
+        if ($this->closed) {
+            return;
+        }
+
+        $this->closed = true;
+        $this->stream->close();
+
+        $this->emit('close');
+        $this->removeAllListeners();
+    }
+
     /** @internal */
     public function handleData($chunk)
     {
@@ -339,12 +348,6 @@ class Client extends EventEmitter implements DuplexStreamInterface
     {
         $this->emit('error', array($e));
         $this->close();
-    }
-
-    /** @internal */
-    public function handleClose()
-    {
-        $this->emit('close');
     }
 
     /** @internal */

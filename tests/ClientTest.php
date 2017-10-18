@@ -27,6 +27,15 @@ class ClientTest extends TestCase
         $this->client->close();
     }
 
+    public function testClosingClientEmitsCloseEventAndRemovesListeners()
+    {
+        $this->client->on('close', $this->expectCallableOnce());
+        $this->assertCount(1, $this->client->listeners('close'));
+
+        $this->client->close();
+        $this->assertEquals(array(), $this->client->listeners('close'));
+    }
+
     public function testIsReadableWillReturnFromUnderlyingStream()
     {
         $this->stream->expects($this->once())->method('isReadable')->willReturn(true);
