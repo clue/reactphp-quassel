@@ -65,7 +65,7 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user)
 
             // send heartbeat message every 30s to check dropped connection
             $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
-                $client->writeHeartBeatRequest(new \DateTime());
+                $client->writeHeartBeatRequest();
             });
 
             // stop heartbeat timer once connection closes

@@ -138,14 +138,51 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
-    public function writeHeartBeatRequest(\DateTime $dt)
+    /**
+     * Sends a heartbeat request
+     *
+     * Expect the Quassel IRC core to respond with a heartbeat reply with the
+     * same Datetime object with millisecond precision.
+     *
+     * Giving a DateTime object is optional because the most common use case is
+     * to send the current timestamp. It is recommended to not give one so the
+     * appropriate timestamp is sent automatically. Otherwise, you should make
+     * sure to use a DateTime object with appropriate precision.
+     *
+     * Note that the Quassel protocol limits the DateTime accuracy to
+     * millisecond precision and incoming DateTime objects will always be
+     * expressed in the current default timezone. Also note that the legacy
+     * protocol only transports number of milliseconds since midnight, so this
+     * is not suited a transport arbitrary timestamps.
+     *
+     * @param null|\DateTime $dt (optional) DateTime object with millisecond precision or null=current timestamp
+     * @return bool
+     */
+    public function writeHeartBeatRequest(\DateTime $dt = null)
     {
+        if ($dt === null) {
+            $dt = \DateTime::createFromFormat('U.u', sprintf('%.6F', microtime(true)));
+        }
+
         return $this->write(array(
             Protocol::REQUEST_HEARTBEAT,
             $dt
         ));
     }
 
+    /**
+     * Sends a heartbeat reply
+     *
+     * This should be sent in response to an incoming heartbeat request from
+     * the Quassel IRC core.
+     *
+     * Giving a DateTime object is mandatory because the most common use case is
+     * responding with the same timestamp that was given in the incoming
+     * heartbeat request message.
+     *
+     * @param \DateTime $dt
+     * @return boolean
+     */
     public function writeHeartBeatReply(\DateTime $dt)
     {
         return $this->write(array(
