@@ -28,11 +28,11 @@ class FactoryTest extends TestCase
         $this->factory->createClient('example.com');
     }
 
-    public function testPassHostnameAndPortToConnector()
+    public function testFullUriWithUnneededComponentsPassHostnameAndPortToConnector()
     {
         $deferred = new Deferred();
         $this->connector->expects($this->once())->method('connect')->with($this->equalTo('example.com:1234'))->will($this->returnValue($deferred->promise()));
-        $this->factory->createClient('example.com:1234');
+        $this->factory->createClient('quassel://example.com:1234/ignored?ignored#ignored');
     }
 
     public function testInvalidUriWillRejectWithoutConnecting()
@@ -57,15 +57,5 @@ class FactoryTest extends TestCase
         $this->prober->expects($this->once())->method('probe')->with($this->equalTo($stream))->will($this->returnValue(Promise\resolve(Protocol::TYPE_DATASTREAM)));
 
         $this->expectPromiseResolve($this->factory->createClient('localhost'));
-    }
-
-    public function testWillNotInvokeProberIfSchemeIsProtocol()
-    {
-        $stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
-
-        $this->connector->expects($this->once())->method('connect')->will($this->returnValue(Promise\resolve($stream)));
-        $this->prober->expects($this->never())->method('probe');
-
-        $this->expectPromiseResolve($this->factory->createClient('legacy://localhost'));
     }
 }
