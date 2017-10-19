@@ -31,7 +31,7 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
         });
     }
 
-    $client->on('data', function ($message) use ($client, $user) {
+    $client->on('data', function ($message) use ($client, $user, $loop) {
         $type = null;
         if (is_array($message) && isset($message['MsgType'])) {
             $type = $message['MsgType'];
@@ -93,6 +93,16 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
                 }
             }
 
+            // send heartbeat message every 30s to check dropped connection
+            $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
+                $client->writeHeartBeatRequest();
+            });
+
+            // stop heartbeat timer once connection closes
+            $client->on('close', function () use ($loop, $timer) {
+                $loop->cancelTimer($timer);
+            });
+
             var_dump('initialization completed, now waiting for incoming messages (assuming core receives any)');
 
             return;
@@ -103,10 +113,16 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
             $type = $message[0];
         }
 
+        // reply to heartbeat messages to avoid timing out
         if ($type === Protocol::REQUEST_HEARTBEAT) {
             //var_dump('heartbeat', $message[1]);
             $client->writeHeartBeatReply($message[1]);
 
+            return;
+        }
+
+        // ignore heartbeat reply messages to our heartbeat requests
+        if ($type === Protocol::REQUEST_HEARTBEATREPLY) {
             return;
         }
 

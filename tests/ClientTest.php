@@ -190,7 +190,7 @@ class ClientTest extends TestCase
         $this->client->writeCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
     }
 
-    public function testWriteHeartBeatRequest()
+    public function testWriteHeartBeatReply()
     {
         $dt = new \DateTime();
 
@@ -203,7 +203,7 @@ class ClientTest extends TestCase
         $this->client->writeHeartBeatReply($dt);
     }
 
-    public function testWriteHeartBeatReply()
+    public function testWriteHeartBeatRequest()
     {
         $dt = new \DateTime();
 
@@ -214,6 +214,22 @@ class ClientTest extends TestCase
         $this->splitter->expects($this->once())->method('writePacket');
 
         $this->client->writeHeartBeatRequest($dt);
+    }
+
+    public function testWriteHeartBeatRequestWithoutTimestampSendsCurrentTimestamp()
+    {
+        $that = $this;
+        $this->protocol->expects($this->once())->method('serializeVariantPacket')->with($this->callback(function ($value) use ($that) {
+            $that->assertCount(2, $value);
+            $that->assertEquals(Protocol::REQUEST_HEARTBEAT, $value[0]);
+
+            $that->assertInstanceOf('DateTime', $value[1]);
+            $that->assertEquals(microtime(true), $value[1]->getTimestamp(), '', 2);
+            return true;
+        }));
+        $this->splitter->expects($this->once())->method('writePacket');
+
+        $this->client->writeHeartBeatRequest();
     }
 
     private function expectWriteMap()

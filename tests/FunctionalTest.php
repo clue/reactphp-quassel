@@ -138,6 +138,32 @@ class FunctionalTest extends TestCase
 
     /**
      * @depends testCreateClient
+     *
+     * @param Client $client
+     */
+    public function testWriteHeartBeatDefaultsToCurrentTime(Client $client)
+    {
+        $promise = new Promise(function ($resolve) use ($client) {
+            $callback = function ($message) use ($resolve, &$callback, $client) {
+                if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                    $client->removeListener('data', $callback);
+                    $resolve($message[1]);
+                }
+            };
+
+            $client->on('data', $callback);
+        });
+
+        $client->writeHeartBeatRequest();
+
+        $received = Block\await($promise, self::$loop, 10.0);
+
+        $this->assertTrue($received instanceof DateTime);
+        $this->assertEquals(microtime(true), $received->getTimestamp(), '', 2.0);
+    }
+
+    /**
+     * @depends testCreateClient
      */
     public function testClose(Client $client)
     {
