@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.6.0 (2017-10-20)
+
+*   Feature / BC break: Upcast legacy Network sync model to newer datastream protocol variant
+    and only support optional `quassel://` URI scheme and always use probing
+    (#27 and #31 by @clue)
+
+    This means that both the old "legacy" protocol and the newer "datastream"
+    protocol now expose message data in the exact same format so that you no
+    longer have to worry about protocol inconsitencies.
+
+    > Note that this is not a BC break for most consumers, it merely updates
+      the "legacy" fallback protocol to behave just like the the "datastream"
+      protocol.
+
+*   Feature / BC break: Significantly improve performance by updating QDataStream dependency and
+    suggest `ext-mbstring` for character encoding and mark all protocol classes as `@internal` only
+    (#26 by @clue)
+
+    This update significantly improves performance and in particular parsing
+    large messages (such as the `SessionInit` message) is now ~20 to ~100
+    times as fast. What previously took seconds now takes mere milliseconds.
+    This also makes the previously implicit dependency on `ext-mbstring`
+    entirely optional.
+    It is recommended to install this extension to support special characters
+    outside of ASCII / ISO8859-1 range.
+
+    > Note that this is not a BC break for most consumers, it merely updates
+      internal protocol handler classes.
+
+*   Feature / Fix: Report error if connection ends while receiving data and
+    simplify close logic to remove all event listeners once closed
+    (#30 by @clue)
+
+*   Feature: Automatically send current timestamp for heartbeat requests by default unless explicit timestamp is given
+    (#32 by @clue)
+
+    ```php
+    // new: no parameter sends current timestamp
+    $client->writeHeartBeatRequest();
+    ```
+
+*   Feature: Limit incoming packet size to 16 MB to avoid excessive buffers
+    (#29 by @clue)
+
+*   Update examples and add chatbot examples
+    (#28 by @clue)
+
 ## 0.5.0 (2017-08-05)
 
 *   Feature / BC break: Replace legacy SocketClient with new Socket component and

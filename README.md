@@ -1,7 +1,7 @@
 # clue/quassel-react [![Build Status](https://travis-ci.org/clue/php-quassel-react.svg?branch=master)](https://travis-ci.org/clue/php-quassel-react)
 
 Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
-built on top of [ReactPHP](http://reactphp.org/).
+built on top of [ReactPHP](https://reactphp.org/).
 
 This is a lightweight and low-level networking library which can be used to
 communicate with your Quassel IRC core.
@@ -12,6 +12,18 @@ users, forward backend events as a message to a channel and much more.
 Unlike conventional IRC chatbots, Quassel IRC allows re-using your existing
 identity and sharing it with both a person and a chatbot, so that an outside
 person has no idea about this and only sees a single contact.
+
+* **Async execution of requests** -
+  Send any number of requests to your Quassel IRC core in parallel (automatic pipeline) and
+  process their responses as soon as results come in.
+* **Event-driven core** -
+  Register your event handler callbacks to react to incoming events, such as an incoming chat message event.
+* **Lightweight, SOLID design** -
+  Provides a thin abstraction that is [*just good enough*](http://en.wikipedia.org/wiki/Principle_of_good_enough)
+  and does not get in your way.
+  Future or custom commands and events require little to no changes to be supported.
+* **Good test coverage** -
+  Comes with an automated tests suite and is regularly tested against actual Quassel IRC cores in the wild
 
 **Table of contents**
 
@@ -179,7 +191,7 @@ The recommended way to install this library is [through Composer](https://getcom
 This will install the latest supported version:
 
 ```bash
-$ composer require clue/quassel-react: ^0.5
+$ composer require clue/quassel-react:^0.6
 ```
 
 See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.
@@ -191,8 +203,8 @@ It's *highly recommended to use PHP 7+* for this project.
 
 Internally, it will use the `ext-mbstring` for converting between different
 character encodings for message strings.
-If this extension is missing, then special characters outside of ASCII/ISO5589-1
-range may be replaced with a `?` placeholder.
+If this extension is missing, then special characters outside of ISO 8859-1 /
+ASCII range may be replaced with a `?` placeholder.
 This means that the string `hällo € 10!` may be converted as `hällo ? 10!`
 instead.
 Installing `ext-mbstring` is highly recommended.
