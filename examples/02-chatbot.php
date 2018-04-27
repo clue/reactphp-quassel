@@ -50,13 +50,6 @@ $factory->createClient($uri)->then(function (Client $client) use ($loop, $keywor
             return;
         }
 
-        // reply to heartbeat messages to avoid timing out
-        if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT) {
-            $client->writeHeartBeatReply($message[1]);
-
-            return;
-        }
-
         // chat message received
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
             $data = $message[2];

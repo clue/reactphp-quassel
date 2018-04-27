@@ -111,6 +111,17 @@ this method will resolve with a "bare" `Client` right after connecting without
 sending any application messages. This can be useful if you need full control
 over the message flow, see below for more details.
 
+Quassel uses "heartbeat" messages as a keep-alive mechanism to check the
+connection between Quassel core and Quassel client is still active. This project
+will automatically respond to each incoming "ping" (heartbeat request) with an
+appropriate "pong" (heartbeat response) message. If you do not want this and
+want to handle incoming heartbeat request messages yourself, you may pass the
+optional `?pong=0` parameter like this:
+
+```php
+$factory->createClient('quassel://localhost?pong=0');
+```
+
 >   This method uses Quassel IRC's probing mechanism for the correct protocol to
     use (newer "datastream" protocol or original "legacy" protocol).
     Protocol handling will be abstracted away for you, so you don't have to

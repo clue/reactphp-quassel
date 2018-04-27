@@ -39,6 +39,11 @@ class Factory
             $parts['port'] = 4242;
         }
 
+        $args = array();
+        if (isset($parts['query'])) {
+            parse_str($parts['query'], $args);
+        }
+
         // establish low-level TCP/IP connection to Quassel IRC core
         $promise = $this->connector->connect($parts['host'] . ':' . $parts['port']);
 
@@ -82,6 +87,19 @@ class Factory
                     isset($parts['user']) ? urldecode($parts['user']) : '',
                     isset($parts['pass']) ? urldecode($parts['pass']) : ''
                 );
+            });
+        }
+
+        // automatically reply to incoming ping requests with a pong unless "?pong=0" is given
+        if (!isset($args['pong']) || $args['pong']) {
+            $promise = $promise->then(function (Client $client) {
+                $client->on('data', function ($message) use ($client) {
+                    if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT) {
+                        $client->writeHeartBeatReply($message[1]);
+                    }
+                });
+
+                return $client;
             });
         }
 

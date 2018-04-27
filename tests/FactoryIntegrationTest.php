@@ -300,6 +300,81 @@ class FactoryIntegrationTest extends TestCase
         Block\sleep(0.1, $loop);
     }
 
+    public function testCreateClientRespondsWithHeartBeatResponseAfterHeartBeatRequest()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        // expect heartbeat response packet
+        $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
+            $protocol = Protocol::createFromProbe(0x02);
+            $data = $protocol->parseVariantPacket(substr($packet, 4));
+
+            return (isset($data[0]) && $data[0] === Protocol::REQUEST_HEARTBEATREPLY);
+        }));
+
+        $server->on('connection', function (ConnectionInterface $conn) use ($data, $loop) {
+            $conn->once('data', function () use ($conn, $data, $loop) {
+                $conn->write("\x00\x00\x00\x02");
+
+                // expect heartbeat response next
+                $conn->on('data', $data);
+
+                $loop->addTimer(0.01, function() use ($conn) {
+                    // response with successful init
+                    $conn->write(FactoryIntegrationTest::encode(array(
+                        Protocol::REQUEST_HEARTBEAT,
+                        new DateTime('2018-05-29 23:05:00')
+                    )));
+                });
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri);
+
+        Block\sleep(0.1, $loop);
+
+        $client = Block\await($promise, $loop);
+        $client->close();
+    }
+
+    public function testCreateClientDoesNotRespondWithHeartBeatResponseIfPongIsDisabled()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        // expect no message in response
+        $data = $this->expectCallableNever();
+
+        $server->on('connection', function (ConnectionInterface $conn) use ($data, $loop) {
+            $conn->once('data', function () use ($conn, $data, $loop) {
+                $conn->write("\x00\x00\x00\x02");
+
+                // expect no message in response
+                $conn->on('data', $data);
+
+                $loop->addTimer(0.01, function() use ($conn) {
+                    // response with successful init
+                    $conn->write(FactoryIntegrationTest::encode(array(
+                        Protocol::REQUEST_HEARTBEAT,
+                        new DateTime('2018-05-29 23:05:00')
+                    )));
+                });
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri . '?pong=0');
+
+        Block\sleep(0.1, $loop);
+
+        $client = Block\await($promise, $loop);
+        $client->close();
+    }
+
     public static function encode($data)
     {
         $protocol = Protocol::createFromProbe(0x02);

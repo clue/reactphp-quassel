@@ -108,14 +108,6 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user)
 
             return;
         }
-
-        // reply to heartbeat messages to avoid timing out
-        if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT) {
-            //var_dump('heartbeat', $message[1]);
-            $client->writeHeartBeatReply($message[1]);
-
-            return;
-        }
     });
 
     $client->on('error', 'printf');
