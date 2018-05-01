@@ -22,12 +22,12 @@ $factory = new Factory($loop);
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
-$factory->createClient($uri)->then(function (Client $client) use ($loop) {
+$factory->createClient($uri)->then(function (Client $client) {
     var_dump('CONNECTED');
 
     $nicks = array();
 
-    $client->on('data', function ($message) use ($client, &$nicks, $loop) {
+    $client->on('data', function ($message) use ($client, &$nicks) {
         // session initialized => initialize all networks
         if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
             var_dump('session initialized, now waiting for incoming messages');
@@ -36,16 +36,6 @@ $factory->createClient($uri)->then(function (Client $client) use ($loop) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
                 $client->writeInitRequest("Network", $nid);
             }
-
-            // send heartbeat message every 30s to check dropped connection
-            $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
-                $client->writeHeartBeatRequest();
-            });
-
-            // stop heartbeat timer once connection closes
-            $client->on('close', function () use ($loop, $timer) {
-                $loop->cancelTimer($timer);
-            });
 
             return;
         }

@@ -29,23 +29,13 @@ $factory = new Factory($loop);
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
-$factory->createClient($uri)->then(function (Client $client) use ($loop, $keyword) {
+$factory->createClient($uri)->then(function (Client $client) use ($keyword) {
     var_dump('CONNECTED');
 
-    $client->on('data', function ($message) use ($client, $keyword, $loop) {
+    $client->on('data', function ($message) use ($client, $keyword) {
         // session initialized
         if (isset($message['MsgType']) && $message['MsgType']=== 'SessionInit') {
             var_dump('session initialized, now waiting for incoming messages');
-
-            // send heartbeat message every 30s to check dropped connection
-            $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
-                $client->writeHeartBeatRequest();
-            });
-
-            // stop heartbeat timer once connection closes
-            $client->on('close', function () use ($loop, $timer) {
-                $loop->cancelTimer($timer);
-            });
 
             return;
         }

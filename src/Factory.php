@@ -90,12 +90,37 @@ class Factory
             });
         }
 
+        // automatically send ping requests and await pong replies unless "?ping=0" is given
         // automatically reply to incoming ping requests with a pong unless "?pong=0" is given
-        if (!isset($args['pong']) || $args['pong']) {
-            $promise = $promise->then(function (Client $client) {
-                $client->on('data', function ($message) use ($client) {
-                    if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT) {
+        $ping = (!isset($args['ping'])) ? 60 : (float)$args['ping'];
+        $pong = (!isset($args['pong']) || $args['pong']) ? true : false;
+        if ($ping !== 0.0 || $pong) {
+            $loop = $this->loop;
+            $promise = $promise->then(function (Client $client) use ($loop, $ping, $pong) {
+                $timer = null;
+                if ($ping !== 0.0) {
+                    // send heartbeat message every X seconds to check dropped connection
+                    $timer = $loop->addPeriodicTimer($ping, function () use ($client) {
+                        $client->writeHeartBeatRequest();
+                    });
+
+                    // stop heartbeat timer once connection closes
+                    $client->on('close', function () use ($loop, &$timer) {
+                        $loop->cancelTimer($timer);
+                        $timer = null;
+                    });
+                }
+
+                $client->on('data', function ($message) use ($client, $pong, &$timer, $loop) {
+                    // reply to incoming ping messages with pong
+                    if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT && $pong) {
                         $client->writeHeartBeatReply($message[1]);
+                    }
+
+                    // restart heartbeat timer once data comes in
+                    if ($timer !== null) {
+                        $loop->cancelTimer($timer);
+                        $timer = $loop->addPeriodicTimer($timer->getInterval(), $timer->getCallback());
                     }
                 });
 

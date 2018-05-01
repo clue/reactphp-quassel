@@ -375,6 +375,97 @@ class FactoryIntegrationTest extends TestCase
         $client->close();
     }
 
+    public function testCreateClientSendsHeartBeatRequestAtInterval()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        // expect heartbeat response packet
+        $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
+            $protocol = Protocol::createFromProbe(0x02);
+            $data = $protocol->parseVariantPacket(substr($packet, 4));
+
+            return (isset($data[0]) && $data[0] === Protocol::REQUEST_HEARTBEAT);
+        }));
+
+        $server->on('connection', function (ConnectionInterface $conn) use ($data) {
+            $conn->once('data', function () use ($conn, $data) {
+                $conn->write("\x00\x00\x00\x02");
+
+                // expect heartbeat request next
+                $conn->on('data', $data);
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri . '?ping=0.05');
+
+        Block\sleep(0.1, $loop);
+
+        $client = Block\await($promise, $loop);
+        $client->close();
+    }
+
+    public function testCreateClientSendsNoHeartBeatRequestIfServerKeepsSendingMessages()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        // expect heartbeat response packet
+        $data = $this->expectCallableNever();
+
+        $server->on('connection', function (ConnectionInterface $conn) use ($data, $loop) {
+            $conn->once('data', function () use ($conn, $data, $loop) {
+                $conn->write("\x00\x00\x00\x02");
+
+                // expect no heartbeat request
+                $conn->on('data', $data);
+
+                // periodically send some dummy messages
+                $loop->addPeriodicTimer(0.01, function() use ($conn) {
+                    $conn->write(FactoryIntegrationTest::encode(array(0)));
+                });
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri . '?ping=0.05&pong=0');
+
+        Block\sleep(0.1, $loop);
+
+        $client = Block\await($promise, $loop);
+        $client->close();
+    }
+
+    public function testCreateClientSendsNoHeartBeatRequestIfPingIsDisabled()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        // expect heartbeat response packet
+        $data = $this->expectCallableNever();
+
+        $server->on('connection', function (ConnectionInterface $conn) use ($data) {
+            $conn->once('data', function () use ($conn, $data) {
+                $conn->write("\x00\x00\x00\x02");
+
+                // expect no heartbeat request
+                $conn->on('data', $data);
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri . '?ping=0');
+
+        Block\sleep(0.1, $loop);
+
+        $client = Block\await($promise, $loop);
+        $client->close();
+    }
+
     public static function encode($data)
     {
         $protocol = Protocol::createFromProbe(0x02);

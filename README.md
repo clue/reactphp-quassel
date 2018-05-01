@@ -122,6 +122,22 @@ optional `?pong=0` parameter like this:
 $factory->createClient('quassel://localhost?pong=0');
 ```
 
+This automatic "pong" mechanism allows the Quassel core to detect the connection
+to the client is still active. However, it does not allow the client to detect
+if the connection to the Quassel core is still active. Because of this, this
+project will automatically send a "ping" (heartbeat request) message to the
+Quassel core if it did not receive any messages for 60s by default. You can pass
+the `?ping=120.0` parameter to change this default interval. The Quassel core
+uses a configurable ping interval of 30s by default and also sends all IRC
+network state changes to the client, so this mechanism should only really kick
+in if the connection looks dead. If you do not want this and want to handle
+outgoing heartbeat request messages yourself, you may pass the optional `?ping=0`
+parameter like this:
+
+```php
+$factory->createClient('quassel://localhost?ping=0');
+```
+
 >   This method uses Quassel IRC's probing mechanism for the correct protocol to
     use (newer "datastream" protocol or original "legacy" protocol).
     Protocol handling will be abstracted away for you, so you don't have to
