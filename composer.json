@@ -15,7 +15,7 @@
     },
     "require": {
     	"php": ">=5.3",
-        "clue/qdatastream": "^0.7",
+        "clue/qdatastream": "^0.7.2",
         "react/event-loop": "^1.0 || ^0.5 || ^0.4 || ^0.3",
         "react/promise": "~2.0|~1.1",
         "react/socket": "^1.0 || ^0.8 || ^0.7",
@@ -24,8 +24,5 @@
     "require-dev": {
         "clue/block-react": "^1.1",
         "phpunit/phpunit": "^6.4 || ^5.7 || ^4.8.35"
-    },
-    "suggest": {
-        "ext-mbstring": "Used for converting character encodings for message strings"
     }
 }

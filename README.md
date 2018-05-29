@@ -203,10 +203,8 @@ It's *highly recommended to use PHP 7+* for this project.
 
 Internally, it will use the `ext-mbstring` for converting between different
 character encodings for message strings.
-If this extension is missing, then special characters outside of ISO 8859-1 /
-ASCII range may be replaced with a `?` placeholder.
-This means that the string `hällo € 10!` may be converted as `hällo ? 10!`
-instead.
+If this extension is missing, then this library will use a slighty slower Regex
+work-around that should otherwise work equally well.
 Installing `ext-mbstring` is highly recommended.
 
 ## Tests
