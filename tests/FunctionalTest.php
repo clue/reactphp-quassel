@@ -43,6 +43,9 @@ class FunctionalTest extends TestCase
         }
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testCreateClient()
     {
         $factory = new Factory(self::$loop);
@@ -164,6 +167,7 @@ class FunctionalTest extends TestCase
 
     /**
      * @depends testCreateClient
+     * @doesNotPerformAssertions
      */
     public function testClose(Client $client)
     {
