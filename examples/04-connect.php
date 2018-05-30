@@ -62,16 +62,8 @@ $factory->createClient($uri)->then(function (Client $client) use ($loop) {
             $type = $message[0];
         }
 
-        // reply to heartbeat messages to avoid timing out
-        if ($type === Protocol::REQUEST_HEARTBEAT) {
-            //var_dump('heartbeat', $message[1]);
-            $client->writeHeartBeatReply($message[1]);
-
-            return;
-        }
-
-        // ignore heartbeat reply messages to our heartbeat requests
-        if ($type === Protocol::REQUEST_HEARTBEATREPLY) {
+        // ignore heartbeat requests and reply messages to our heartbeat requests
+        if ($type === Protocol::REQUEST_HEARTBEAT || $type === Protocol::REQUEST_HEARTBEATREPLY) {
             return;
         }
 

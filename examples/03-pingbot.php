@@ -50,13 +50,6 @@ $factory->createClient($uri)->then(function (Client $client) use ($loop) {
             return;
         }
 
-        // reply to heartbeat messages to avoid timing out
-        if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT) {
-            $client->writeHeartBeatReply($message[1]);
-
-            return;
-        }
-
         // network information received, remember nick used on this network
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_INITDATA && $message[1] === 'Network') {
             $nicks[$message[2]] = $message[3]['myNick'];
