@@ -22,10 +22,10 @@ $factory = new Factory($loop);
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
-$factory->createClient($uri)->then(function (Client $client) use ($loop) {
+$factory->createClient($uri)->then(function (Client $client) {
     var_dump('CONNECTED');
 
-    $client->on('data', function ($message) use ($client, $loop) {
+    $client->on('data', function ($message) use ($client) {
         // session initialized => initialize all networks and buffers
         if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
             var_dump('session initialized');
@@ -41,16 +41,6 @@ $factory->createClient($uri)->then(function (Client $client) use ($loop) {
                     $client->writeInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
                 }
             }
-
-            // send heartbeat message every 30s to check dropped connection
-            $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
-                $client->writeHeartBeatRequest();
-            });
-
-            // stop heartbeat timer once connection closes
-            $client->on('close', function () use ($loop, $timer) {
-                $loop->cancelTimer($timer);
-            });
 
             var_dump('initialization completed, now waiting for incoming messages (assuming core receives any)');
 

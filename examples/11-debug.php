@@ -22,11 +22,11 @@ $loop = \React\EventLoop\Factory::create();
 $factory = new Factory($loop);
 
 echo '[1/5] Connecting' . PHP_EOL;
-$factory->createClient($host)->then(function (Client $client) use ($loop, $user) {
+$factory->createClient($host)->then(function (Client $client) use ($user) {
     echo '[2/5] Connected, now initializing' . PHP_EOL;
     $client->writeClientInit();
 
-    $client->on('data', function ($message) use ($client, $user, $loop) {
+    $client->on('data', function ($message) use ($client, $user) {
         if (isset($message[3]['IrcUsersAndChannels'])) {
             // print network information except for huge users/channels list
             $debug = $message;
@@ -95,16 +95,6 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user)
                     $client->writeInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
                 }
             }
-
-            // send heartbeat message every 30s to check dropped connection
-            $timer = $loop->addPeriodicTimer(30.0, function () use ($client) {
-                $client->writeHeartBeatRequest();
-            });
-
-            // stop heartbeat timer once connection closes
-            $client->on('close', function () use ($loop, $timer) {
-                $loop->cancelTimer($timer);
-            });
 
             return;
         }
