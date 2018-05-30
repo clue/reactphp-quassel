@@ -180,6 +180,33 @@ class FunctionalTest extends TestCase
         return Block\await($promise, self::$loop, 10.0);
     }
 
+    public function testCreateClientWithAuthUrlReceivesSessionInit()
+    {
+        $factory = new Factory(self::$loop);
+
+        $url = rawurlencode(self::$username) . ':' . rawurlencode(self::$password) . '@' . self::$host;
+        $promise = $factory->createClient($url);
+        $client = Block\await($promise, self::$loop, 10.0);
+
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('SessionInit', $message['MsgType']);
+
+        $client->close();
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testCreateClientWithInvalidAuthUrlRejects()
+    {
+        $factory = new Factory(self::$loop);
+
+        $url = rawurlencode(self::$username) . ':@' . self::$host;
+        $promise = $factory->createClient($url);
+
+        Block\await($promise, self::$loop, 10.0);
+    }
+
     private function awaitMessage(Client $client)
     {
         return Block\await(new Promise(function ($resolve, $reject) use ($client) {

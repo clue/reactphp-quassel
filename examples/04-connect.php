@@ -6,79 +6,28 @@ use Clue\React\Quassel\Io\Protocol;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$debug = false;
 $host = '127.0.0.1';
-$user = array();
 if (isset($argv[1])) { $host = $argv[1]; }
 
 echo 'Server: ' . $host . PHP_EOL;
 
 echo 'User name: ';
-$user['name'] = trim(fgets(STDIN));
+$user = trim(fgets(STDIN));
 
 echo 'Password: ';
-$user['password'] = trim(fgets(STDIN));
+$pass = trim(fgets(STDIN));
 
 $loop = \React\EventLoop\Factory::create();
 $factory = new Factory($loop);
 
-$factory->createClient($host)->then(function (Client $client) use ($loop, $user, $debug) {
+$uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
+
+$factory->createClient($uri)->then(function (Client $client) use ($loop) {
     var_dump('CONNECTED');
 
-    if ($debug) {
-        $client->on('data', function ($message) {
-            var_dump($message);
-        });
-    }
-
-    $client->on('data', function ($message) use ($client, $user, $loop) {
-        $type = null;
-        if (is_array($message) && isset($message['MsgType'])) {
-            $type = $message['MsgType'];
-        }
-
-        if ($type === 'ClientInitAck') {
-            if (!$message['Configured']) {
-                var_dump('core not configured yet, you may want to issue a setup call manually');
-                print_r($message['StorageBackends']);
-
-                echo 'Hit enter to set-up server with defaults, otherwise cancel program now';
-                fgets(STDIN);
-
-                $client->writeCoreSetupData($user['name'], $user['password']);
-
-                return;
-            }
-            var_dump('core ready, now logging in');
-            $client->writeClientLogin($user['name'], $user['password']);
-
-            return;
-        }
-        if ($type === 'CoreSetupAck') {
-            var_dump('core set-up, now logging in');
-            $client->writeClientLogin($user['name'], $user['password']);
-
-            return;
-        }
-        if ($type === 'CoreSetupReject') {
-            var_dump('Unable to set-up core', $message['Error']);
-
-            return;
-        }
-        if ($type === 'ClientLoginReject') {
-            var_dump('Unable to login', $message['Error']);
-
-            var_dump('Now closing connection');
-            $client->close();
-
-            return;
-        }
-        if ($type === 'ClientLoginAck') {
-            var_dump('successfully logged in, now waiting for a SessionInit message');
-
-            return;
-        }
-        if ($type === 'SessionInit') {
+    $client->on('data', function ($message) use ($client, $loop) {
+        // session initialized => initialize all networks and buffers
+        if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
             var_dump('session initialized');
 
             foreach ($message['SessionState']['NetworkIds'] as $nid) {
@@ -145,8 +94,6 @@ $factory->createClient($host)->then(function (Client $client) use ($loop, $user,
     $client->on('close', function () {
         echo 'Connection closed' . PHP_EOL;
     });
-
-    $client->writeClientInit();
 })->then(null, function ($e) {
     echo $e;
 });

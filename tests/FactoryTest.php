@@ -35,7 +35,7 @@ class FactoryTest extends TestCase
     {
         $deferred = new Deferred();
         $this->connector->expects($this->once())->method('connect')->with($this->equalTo('example.com:1234'))->will($this->returnValue($deferred->promise()));
-        $this->factory->createClient('quassel://example.com:1234/ignored?ignored#ignored');
+        $this->factory->createClient('quassel://user:pass@example.com:1234/ignored?ignored#ignored');
     }
 
     public function testInvalidUriWillRejectWithoutConnecting()

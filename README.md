@@ -74,10 +74,10 @@ and probing for the correct protocol to use.
 ```php
 $factory->createClient('localhost')->then(
     function (Client $client) {
-        // client connected
+        // client connected (and authenticated)
     },
     function (Exception $e) {
-        // an error occured while trying to connect client
+        // an error occured while trying to connect (or authenticate) client
     }
 );
 ```
@@ -89,6 +89,27 @@ if your Quassel IRC core is not using the default TCP/IP port `4242`:
 ```php
 $factory->createClient('quassel://localhost:4242');
 ```
+
+Quassel supports password-based authentication. If you want to create a "normal"
+client connection, you're recommended to pass the authentication details as part
+of the URI. You can pass the password `h@llo` URL-encoded (percent-encoded) as
+part of the URI like this:
+
+```php
+$factory->createClient('quassel://user:h%40llo@localhost')->then(
+    function (Client $client) {
+        // client sucessfully connected and authenticated
+        $client->on('data', function ($data) {
+            // next message to follow would be "SessionInit"
+        });
+    }
+);
+```
+
+Note that if you do not pass the authentication details as part of the URI, then
+this method will resolve with a "bare" `Client` right after connecting without
+sending any application messages. This can be useful if you need full control
+over the message flow, see below for more details.
 
 >   This method uses Quassel IRC's probing mechanism for the correct protocol to
     use (newer "datastream" protocol or original "legacy" protocol).

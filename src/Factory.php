@@ -67,10 +67,87 @@ class Factory
         });
 
         // decorate client once probing is finished
-        return $promise->then(
+        $promise = $promise->then(
             function (DuplexStreamInterface $stream) use (&$probe) {
                 return new Client($stream, Protocol::createFromProbe($probe));
             }
         );
+
+        // automatic login if username/password is given as part of URI
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            $that = $this;
+            $promise = $promise->then(function (Client $client) use ($that, $parts) {
+                return $that->awaitLogin(
+                    $client,
+                    isset($parts['user']) ? urldecode($parts['user']) : '',
+                    isset($parts['pass']) ? urldecode($parts['pass']) : ''
+                );
+            });
+        }
+
+        return $promise;
+    }
+
+    /** @internal */
+    public function awaitLogin(Client $client, $user, $pass)
+    {
+        return new Promise\Promise(function ($resolve, $reject) use ($client, $user, $pass) {
+            // handle incoming response messages
+            $client->on('data', $handler = function ($data) use ($resolve, $reject, $client, $user, $pass, &$handler) {
+                $type = null;
+                if (is_array($data) && isset($data['MsgType'])) {
+                    $type = $data['MsgType'];
+                }
+
+                // continue to login if connection is initialized
+                if ($type === 'ClientInitAck') {
+                    if (!isset($data['Configured']) || !$data['Configured']) {
+                        $reject(new \RuntimeException('Unable to log in to unconfigured Quassel IRC core'));
+                        return $client->close();
+                    }
+
+                    $client->writeClientLogin($user, $pass);
+
+                    return;
+                }
+
+                // reject if core rejects initialization
+                if ($type === 'ClientInitReject') {
+                    $reject(new \RuntimeException('Connection rejected by Quassel core: ' . $data['Error']));
+                    return $client->close();
+                }
+
+                // reject promise if login is rejected
+                if ($type === 'ClientLoginReject') {
+                    $reject(new \RuntimeException('Unable to log in: ' . $data['Error']));
+                    return $client->close();
+                }
+
+                // resolve promise if login is successful
+                if ($type === 'ClientLoginAck') {
+                    $client->removeListener('data', $handler);
+                    $handler = null;
+                    $resolve($client);
+
+                    return;
+                }
+
+                // otherwise reject if we receive an unexpected message
+                $reject(new \RuntimeException('Received unexpected "' . $type . '" message during login'));
+                $client->close();
+            });
+
+            // reject promise if client emits error
+            $client->on('error', function ($error) use ($reject) {
+                $reject($error);
+            });
+
+            // reject promise if client closes while waiting for login
+            $client->on('close', function () use ($reject) {
+                $reject(new \RuntimeException('Unexpected close'));
+            });
+
+            $client->writeClientInit();
+        });
     }
 }
