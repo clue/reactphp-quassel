@@ -96,12 +96,21 @@ class Factory
         $pong = (!isset($args['pong']) || $args['pong']) ? true : false;
         if ($ping !== 0.0 || $pong) {
             $loop = $this->loop;
+            $await = false;
             $promise = $promise->then(function (Client $client) use ($loop, $ping, $pong) {
                 $timer = null;
                 if ($ping !== 0.0) {
                     // send heartbeat message every X seconds to check dropped connection
-                    $timer = $loop->addPeriodicTimer($ping, function () use ($client) {
-                        $client->writeHeartBeatRequest();
+                    $timer = $loop->addPeriodicTimer($ping, function () use ($client, &$await) {
+                        if ($await) {
+                            $client->emit('error', array(
+                                new \RuntimeException('Connection to Quassel core timed out')
+                            ));
+                            $client->close();
+                        } else {
+                            $client->writeHeartBeatRequest();
+                            $await = true;
+                        }
                     });
 
                     // stop heartbeat timer once connection closes
@@ -111,7 +120,7 @@ class Factory
                     });
                 }
 
-                $client->on('data', function ($message) use ($client, $pong, &$timer, $loop) {
+                $client->on('data', function ($message) use ($client, $pong, &$timer, &$await, $loop) {
                     // reply to incoming ping messages with pong
                     if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT && $pong) {
                         $client->writeHeartBeatReply($message[1]);
@@ -121,6 +130,7 @@ class Factory
                     if ($timer !== null) {
                         $loop->cancelTimer($timer);
                         $timer = $loop->addPeriodicTimer($timer->getInterval(), $timer->getCallback());
+                        $await = false;
                     }
                 });
 

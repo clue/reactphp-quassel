@@ -439,6 +439,28 @@ class FactoryIntegrationTest extends TestCase
         $client->close();
     }
 
+    public function testCreateClientClosesWithErrorIfServerDoesNotRespondToHeartBeatRequests()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        $server->on('connection', function (ConnectionInterface $conn) {
+            $conn->once('data', function () use ($conn) {
+                $conn->write("\x00\x00\x00\x02");
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient($uri . '?ping=0.03');
+
+        $client = Block\await($promise, $loop, 0.1);
+
+        $client->on('error', $this->expectCallableOnce());
+        $client->on('close', $this->expectCallableOnce());
+        Block\sleep(0.1, $loop);
+    }
+
     public function testCreateClientSendsNoHeartBeatRequestIfPingIsDisabled()
     {
         $loop = LoopFactory::create();
