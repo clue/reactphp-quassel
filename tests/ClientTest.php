@@ -15,6 +15,9 @@ class ClientTest extends TestCase
         $this->client = new Client($this->stream, $this->protocol, $this->splitter);
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testCtorOptionalArgs()
     {
         $this->stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
