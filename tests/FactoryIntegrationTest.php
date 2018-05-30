@@ -157,6 +157,64 @@ class FactoryIntegrationTest extends TestCase
     /**
      * @expectedException RuntimeException
      */
+    public function testCreateClientWithAuthRejectsIfServerSendsClientInitRejectAfterClientInit()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        $server->on('connection', function (ConnectionInterface $conn) {
+            $conn->once('data', function () use ($conn) {
+                $conn->write("\x00\x00\x00\x02");
+
+                $conn->on('data', function () use ($conn) {
+                    // respond with rejection
+                    $conn->write(FactoryIntegrationTest::encode(array(
+                        'MsgType' => 'ClientInitReject',
+                        'Error' => 'Too old'
+                    )));
+                });
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient('user:pass@' . $uri);
+
+        Block\await($promise, $loop, 10.0);
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    public function testCreateClientWithAuthRejectsIfServerSendsUnknownMessageAfterClientInit()
+    {
+        $loop = LoopFactory::create();
+        $server = new Server(0, $loop);
+
+        $server->on('connection', function (ConnectionInterface $conn) {
+            $conn->once('data', function () use ($conn) {
+                $conn->write("\x00\x00\x00\x02");
+
+                $conn->on('data', function () use ($conn) {
+                    // respond with unknown message
+                    $conn->write(FactoryIntegrationTest::encode(array(
+                        'MsgType' => 'Unknown',
+                        'Error' => 'Ignored'
+                    )));
+                });
+            });
+        });
+
+        $uri = str_replace('tcp://', '', $server->getAddress());
+        $factory = new Factory($loop);
+        $promise = $factory->createClient('user:pass@' . $uri);
+
+        Block\await($promise, $loop, 10.0);
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
     public function testCreateClientWithAuthRejectsIfServerSendsInvalidTruncatedResponseAfterClientInit()
     {
         $loop = LoopFactory::create();

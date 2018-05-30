@@ -111,6 +111,12 @@ class Factory
                     return;
                 }
 
+                // reject if core rejects initialization
+                if ($type === 'ClientInitReject') {
+                    $reject(new \RuntimeException('Connection rejected by Quassel core: ' . $data['Error']));
+                    return $client->close();
+                }
+
                 // reject promise if login is rejected
                 if ($type === 'ClientLoginReject') {
                     $reject(new \RuntimeException('Unable to log in: ' . $data['Error']));
@@ -125,6 +131,10 @@ class Factory
 
                     return;
                 }
+
+                // otherwise reject if we receive an unexpected message
+                $reject(new \RuntimeException('Received unexpected "' . $type . '" message during login'));
+                $client->close();
             });
 
             // reject promise if client emits error
