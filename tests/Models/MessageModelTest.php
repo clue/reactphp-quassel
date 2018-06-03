@@ -10,8 +10,8 @@ class MessageModelTest extends TestCase
         $message = new MessageModel(
             1000,
             1528039705,
-            0x01,
-            0x00,
+            MessageModel::TYPE_PLAIN,
+            MessageModel::FLAG_NONE,
             $buffer,
             'another_clue!user@host',
             'Hello world!'
@@ -19,8 +19,8 @@ class MessageModelTest extends TestCase
 
         $this->assertSame(1000, $message->getId());
         $this->assertSame(1528039705, $message->getTimestamp());
-        $this->assertSame(0x01, $message->getType());
-        $this->assertSame(0x00, $message->getFlags());
+        $this->assertSame(MessageModel::TYPE_PLAIN, $message->getType());
+        $this->assertSame(MessageModel::FLAG_NONE, $message->getFlags());
         $this->assertSame($buffer, $message->getBufferInfo());
         $this->assertSame('another_clue!user@host', $message->getSender());
         $this->assertSame('Hello world!', $message->getContents());
@@ -32,8 +32,8 @@ class MessageModelTest extends TestCase
         $message = new MessageModel(
             999,
             1528039704,
-            0x20,
-            0x00,
+            MessageModel::TYPE_JOIN,
+            MessageModel::FLAG_NONE,
             $buffer,
             'another_clue!user@host',
             '#reactphp'
@@ -41,8 +41,8 @@ class MessageModelTest extends TestCase
 
         $this->assertSame(999, $message->getId());
         $this->assertSame(1528039704, $message->getTimestamp());
-        $this->assertSame(0x20, $message->getType());
-        $this->assertSame(0x00, $message->getFlags());
+        $this->assertSame(MessageModel::TYPE_JOIN, $message->getType());
+        $this->assertSame(MessageModel::FLAG_NONE, $message->getFlags());
         $this->assertSame($buffer, $message->getBufferInfo());
         $this->assertSame('another_clue!user@host', $message->getSender());
         $this->assertSame('#reactphp', $message->getContents());

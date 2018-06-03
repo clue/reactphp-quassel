@@ -3,6 +3,7 @@
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\BufferInfoModel;
 use Clue\React\Quassel\Models\MessageModel;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -79,7 +80,7 @@ $factory->createClient($uri)->then(function (Client $client) {
             }
 
             // received "ping" in direct query buffer (user to user)
-            if (strtolower($data->getContents()) === 'ping' && $data->getBufferInfo()->getType() === 0x04) {
+            if (strtolower($data->getContents()) === 'ping' && $data->getBufferInfo()->getType() === BufferInfoModel::TYPE_QUERY) {
                 $reply = 'pong :-)';
             }
 
