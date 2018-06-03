@@ -1,17 +1,17 @@
 <?php
 
-use Clue\React\Quassel\Models\MessageModel;
+use Clue\React\Quassel\Models\Message;
 
-class MessageModelTest extends TestCase
+class MessageTest extends TestCase
 {
     public function testChatMessage()
     {
-        $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfoModel')->disableOriginalConstructor()->getMock();
-        $message = new MessageModel(
+        $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfo')->disableOriginalConstructor()->getMock();
+        $message = new Message(
             1000,
             1528039705,
-            MessageModel::TYPE_PLAIN,
-            MessageModel::FLAG_NONE,
+            Message::TYPE_PLAIN,
+            Message::FLAG_NONE,
             $buffer,
             'another_clue!user@host',
             'Hello world!'
@@ -19,8 +19,8 @@ class MessageModelTest extends TestCase
 
         $this->assertSame(1000, $message->getId());
         $this->assertSame(1528039705, $message->getTimestamp());
-        $this->assertSame(MessageModel::TYPE_PLAIN, $message->getType());
-        $this->assertSame(MessageModel::FLAG_NONE, $message->getFlags());
+        $this->assertSame(Message::TYPE_PLAIN, $message->getType());
+        $this->assertSame(Message::FLAG_NONE, $message->getFlags());
         $this->assertSame($buffer, $message->getBufferInfo());
         $this->assertSame('another_clue!user@host', $message->getSender());
         $this->assertSame('Hello world!', $message->getContents());
@@ -28,12 +28,12 @@ class MessageModelTest extends TestCase
 
     public function testJoinMessage()
     {
-        $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfoModel')->disableOriginalConstructor()->getMock();
-        $message = new MessageModel(
+        $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfo')->disableOriginalConstructor()->getMock();
+        $message = new Message(
             999,
             1528039704,
-            MessageModel::TYPE_JOIN,
-            MessageModel::FLAG_NONE,
+            Message::TYPE_JOIN,
+            Message::FLAG_NONE,
             $buffer,
             'another_clue!user@host',
             '#reactphp'
@@ -41,8 +41,8 @@ class MessageModelTest extends TestCase
 
         $this->assertSame(999, $message->getId());
         $this->assertSame(1528039704, $message->getTimestamp());
-        $this->assertSame(MessageModel::TYPE_JOIN, $message->getType());
-        $this->assertSame(MessageModel::FLAG_NONE, $message->getFlags());
+        $this->assertSame(Message::TYPE_JOIN, $message->getType());
+        $this->assertSame(Message::FLAG_NONE, $message->getFlags());
         $this->assertSame($buffer, $message->getBufferInfo());
         $this->assertSame('another_clue!user@host', $message->getSender());
         $this->assertSame('#reactphp', $message->getContents());

@@ -2,7 +2,7 @@
 
 namespace Clue\React\Quassel\Models;
 
-class MessageModel
+class Message
 {
     // @link https://github.com/quassel/quassel/blob/e17fca767d60c06ca02bc5898ced04f06d3670bd/src/common/message.h#L35
     const TYPE_PLAIN = 0x00001;
@@ -39,19 +39,21 @@ class MessageModel
     private $flags;
     private $bufferInfo;
     private $sender;
-    private $content;
+    private $contents;
 
     /**
+     * [Internal] Instantiation is handled internally and should not be called manually.
      *
-     * @param int             $id
-     * @param int             $timestamp  UNIX timestamp
-     * @param int             $type       single type constant, see self::TYPE_* constants
-     * @param int             $flags      bitmask of flag constants, see self::FLAG_* constants
-     * @param BufferInfoModel $bufferInfo
-     * @param string          $sender     sender in the form `nick!user@host` or only `host` or empty string
-     * @param string          $content
+     * @param int        $id
+     * @param int        $timestamp  UNIX timestamp
+     * @param int        $type       single type constant, see self::TYPE_* constants
+     * @param int        $flags      bitmask of flag constants, see self::FLAG_* constants
+     * @param BufferInfo $bufferInfo
+     * @param string     $sender     sender in the form `nick!user@host` or only `host` or empty string
+     * @param string     $contents
+     * @internal
      */
-    public function __construct($id, $timestamp, $type, $flags, BufferInfoModel $bufferInfo, $sender, $content)
+    public function __construct($id, $timestamp, $type, $flags, BufferInfo $bufferInfo, $sender, $contents)
     {
         $this->id = $id;
         $this->timestamp = $timestamp;
@@ -59,7 +61,7 @@ class MessageModel
         $this->flags = $flags;
         $this->bufferInfo = $bufferInfo;
         $this->sender = $sender;
-        $this->content = $content;
+        $this->contents = $contents;
     }
 
     /**
@@ -95,7 +97,7 @@ class MessageModel
     }
 
     /**
-     * @return BufferInfoModel
+     * @return BufferInfo reference to the buffer/channel this message was received in
      */
     public function getBufferInfo()
     {
@@ -116,6 +118,6 @@ class MessageModel
      */
     public function getContents()
     {
-        return $this->content;
+        return $this->contents;
     }
 }

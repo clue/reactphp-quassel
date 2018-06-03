@@ -214,8 +214,8 @@ anything about it.
 There are only few noticable exceptions to this rule:
 
 *   Incoming buffers/channels and chat messages use complex data models, so they
-    are represented by `BufferInfoModel` and `MessageModel` respectively. All other
-    data types use plain structured data, so you can access it's array-based
+    are represented by `BufferInfo` and `Message` respectively. All other data
+    types use plain structured data, so you can access it's array-based
     structure very similar to a JSON-like data structure.
 *   The legacy protocol uses plain times for heartbeat messages while the newer
     datastream protocol uses `DateTime` objects.

@@ -6,11 +6,11 @@ use Clue\QDataStream\QVariant;
 use Clue\QDataStream\Types;
 use Clue\React\Quassel\Io\PacketSplitter;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\BufferInfo;
 use Evenement\EventEmitter;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
-use Clue\React\Quassel\Models\BufferInfoModel;
 
 class Client extends EventEmitter implements DuplexStreamInterface
 {
@@ -192,13 +192,20 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
-    public function writeBufferInput(BufferInfoModel $bufferInfo, $input)
+    /**
+     * Sends a chat message to the given buffer/channel
+     *
+     * @param BufferInfo $bufferInfo buffer/channel to send to (from previous Message object or SessionInit message)
+     * @param string     $contents   buffer input (chat message) to send
+     * @return bool
+     */
+    public function writeBufferInput(BufferInfo $bufferInfo, $contents)
     {
         return $this->write(array(
             Protocol::REQUEST_RPCCALL,
             "2sendInput(BufferInfo,QString)",
             new QVariant($bufferInfo, 'BufferInfo'),
-            (string)$input
+            (string)$contents
         ));
     }
 

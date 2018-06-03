@@ -2,7 +2,7 @@
 
 namespace Clue\React\Quassel\Models;
 
-class BufferInfoModel
+class BufferInfo
 {
     // @link https://github.com/quassel/quassel/blob/e17fca767d60c06ca02bc5898ced04f06d3670bd/src/common/bufferinfo.h#L32
     const TYPE_INVALID = 0x00;
@@ -18,11 +18,14 @@ class BufferInfoModel
     private $name;
 
     /**
+     * [Internal] Instantiation is handled internally and should not be called manually.
+     *
      * @param int    $id
      * @param int    $networkId
      * @param int    $type      single type constant, see self::TYPE_*
      * @param int    $groupId
      * @param string $name      buffer/channel name `#channel`, `user` or empty string
+     * @internal
      */
     public function __construct($id, $networkId, $type, $groupId, $name)
     {

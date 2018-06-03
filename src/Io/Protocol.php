@@ -4,8 +4,8 @@ namespace Clue\React\Quassel\Io;
 
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Reader;
-use Clue\React\Quassel\Models\BufferInfoModel;
-use Clue\React\Quassel\Models\MessageModel;
+use Clue\React\Quassel\Models\BufferInfo;
+use Clue\React\Quassel\Models\Message;
 
 /** @internal */
 abstract class Protocol
@@ -57,7 +57,7 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'BufferInfo' => function (Reader $reader) {
-                return new BufferInfoModel(
+                return new BufferInfo(
                     $reader->readUInt(),
                     $reader->readUInt(),
                     $reader->readUShort(),
@@ -74,7 +74,7 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'Message' => function (Reader $reader) {
-                return new MessageModel(
+                return new Message(
                     $reader->readUInt(),
                     $reader->readUInt(),
                     $reader->readUInt(),
