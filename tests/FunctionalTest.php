@@ -6,6 +6,8 @@ use Clue\React\Block;
 use Clue\React\Quassel\Client;
 use React\Promise\Promise;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\BufferInfo;
+use Clue\React\Quassel\Models\Message;
 
 class FunctionalTest extends TestCase
 {
@@ -190,6 +192,50 @@ class FunctionalTest extends TestCase
 
         $message = $this->awaitMessage($client);
         $this->assertEquals('SessionInit', $message['MsgType']);
+
+        $client->close();
+    }
+
+    public function testRequestBacklogReceivesBacklog()
+    {
+        $factory = new Factory(self::$loop);
+
+        $url = rawurlencode(self::$username) . ':' . rawurlencode(self::$password) . '@' . self::$host;
+        $promise = $factory->createClient($url);
+        $client = Block\await($promise, self::$loop, 10.0);
+        /* @var $client Client */
+
+        $message = $this->awaitMessage($client);
+        $this->assertEquals('SessionInit', $message['MsgType']);
+
+        // try to pick first buffer
+        $buffer = reset($message['SessionState']['BufferInfos']);
+        if ($buffer === false) {
+            $client->close();
+            $this->markTestSkipped('Empty quassel core with no buffers?');
+        }
+
+        // fetch newest messages for this buffer
+        $this->assertTrue($buffer instanceof BufferInfo);
+        $client->writeBufferRequestBacklog($buffer->getId(), -1, -1, $maximum = 2, 0);
+
+        $received = $this->awaitMessage($client);
+        $this->assertTrue(isset($received[0]));
+        $this->assertSame(1, $received[0]);
+        $this->assertSame('BacklogManager', $received[1]);
+        $this->assertSame('receiveBacklog', $received[3]);
+        $this->assertSame($maximum, $received[7]);
+        $this->assertTrue(is_array($received[9]));
+        $this->assertLessThanOrEqual($maximum, count($received[9]));
+
+        // try to pick newest message
+        $newest = reset($received[9]);
+        if ($newest === false) {
+            $client->close();
+            $this->markTestSkipped('No messages in first buffer?');
+        }
+
+        $this->assertTrue($newest instanceof Message);
 
         $client->close();
     }

@@ -209,18 +209,60 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
-    public function writeBufferRequestBacklog($bufferId, $maxAmount, $messageIdFirst = -1, $messageIdLast = -1)
+    /**
+     * Sends a backlog request for the given buffer/channel
+     *
+     * If you want to fetch the newest 20 messages for a channel, you can simply
+     * pass the correct buffer ID, a $maxAmount of 20 and leave the other
+     * parameters unset. This will respond with a message that contains the last
+     * 20 messages (if any) where the newest message is the first element in the
+     * array of messages.
+     *
+     * ```php
+     * $client->writeBufferRequestBacklog($id, -1, -1, 20, 0);
+     * ```
+     *
+     * If you want to fetch the next 20 older messages for this channel, you
+     * can simply pick the message ID of the oldested (and thus last) message
+     * in this array and pass this to this method as `$messageIdLast`.
+     *
+     * ```php
+     * $oldest = end($messages)->getId();
+     * $client->writeBufferRequestBacklog($id, -1, $oldest, 20, 0);
+     * ```
+     *
+     * If you want to poll the channel for new messages, you can simply pick the
+     * message ID of the newest (and thus first) message in the previous array
+     * and pass this ID to this method as `$messageIdFirst`. This will return
+     * the last 20 messages (if any) and will include the given message ID as
+     * the last element in the array of messages if no more than 20 new messages
+     * arrived in the meantime. If no new messages are available, this array
+     * will contain the given message ID as the only entry.
+     *
+     * ```php
+     * $newest = reset($messages)->getId();
+     * $client->writeBufferRequestBacklog($id, $newest, -1, 20, 0);
+     * ```
+     *
+     * @param int $bufferId       buffer/channel to fetch backlog from
+     * @param int $messageIdFirst optional, only fetch messages newer than this ID, -1=no limit
+     * @param int $messageIdLast  optional, only fetch messages older than this ID, -1=no limit
+     * @param int $maxAmount      maximum number of messages to fetch at once, -1=no limit
+     * @param int $additional     number of additional messages to fetch, 0=none, -1=no limit
+     * @return bool
+     */
+    public function writeBufferRequestBacklog($bufferId, $messageIdFirst, $messageIdLast, $maxAmount, $additional)
     {
         return $this->write(array(
             Protocol::REQUEST_SYNC,
             "BacklogManager",
             "",
             "requestBacklog",
-            new QVariant($bufferId, 'BufferId'),
-            new QVariant($messageIdFirst, 'MsgId'),
-            new QVariant($messageIdLast, 'MsgId'),
+            new QVariant((int)$bufferId, 'BufferId'),
+            new QVariant((int)$messageIdFirst, 'MsgId'),
+            new QVariant((int)$messageIdLast, 'MsgId'),
             (int)$maxAmount,
-            0
+            (int)$additional
         ));
     }
 
