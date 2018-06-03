@@ -165,6 +165,7 @@ $client->writeHeartBeatRequest($time);
 $client->writeHeartBeatReply($time);
 
 $client->writeBufferRequestBacklog($bufferId, $messageIdFirst, $messageIdLast, $maxAmount, $additional);
+$client->writeBufferRequestBacklogAll($messageIdFirst, $messageIdLast, $maxAmount, $additional);
 $client->writeBufferInput($bufferInfo, $input);
 
 // many more…

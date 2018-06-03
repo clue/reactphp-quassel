@@ -250,6 +250,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
      * @param int $maxAmount      maximum number of messages to fetch at once, -1=no limit
      * @param int $additional     number of additional messages to fetch, 0=none, -1=no limit
      * @return bool
+     * @see self::writeBufferRequestBacklogAll()
      */
     public function writeBufferRequestBacklog($bufferId, $messageIdFirst, $messageIdLast, $maxAmount, $additional)
     {
@@ -259,6 +260,30 @@ class Client extends EventEmitter implements DuplexStreamInterface
             "",
             "requestBacklog",
             new QVariant((int)$bufferId, 'BufferId'),
+            new QVariant((int)$messageIdFirst, 'MsgId'),
+            new QVariant((int)$messageIdLast, 'MsgId'),
+            (int)$maxAmount,
+            (int)$additional
+        ));
+    }
+
+    /**
+     * Sends a backlog request for all messages in all channels
+     *
+     * @param int $messageIdFirst
+     * @param int $messageIdLast
+     * @param int $maxAmount
+     * @param int $additional
+     * @return bool
+     * @see self::writeBufferRequestBacklog() for parameter description
+     */
+    public function writeBufferRequestBacklogAll($messageIdFirst, $messageIdLast, $maxAmount, $additional)
+    {
+        return $this->write(array(
+            Protocol::REQUEST_SYNC,
+            "BacklogManager",
+            "",
+            "requestBacklogAll",
             new QVariant((int)$messageIdFirst, 'MsgId'),
             new QVariant((int)$messageIdLast, 'MsgId'),
             (int)$maxAmount,

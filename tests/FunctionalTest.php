@@ -235,6 +235,26 @@ class FunctionalTest extends TestCase
             $this->markTestSkipped('No messages in first buffer?');
         }
 
+        // poll for newer messages in all channels
+        $this->assertTrue($newest instanceof Message);
+        $client->writeBufferRequestBacklogAll($newest->getId(), -1, $maximum, 0);
+
+        $received = $this->awaitMessage($client);
+        $this->assertTrue(isset($received[0]));
+        $this->assertSame(1, $received[0]);
+        $this->assertSame('BacklogManager', $received[1]);
+        $this->assertSame('receiveBacklogAll', $received[3]);
+        $this->assertSame($maximum, $received[6]);
+        $this->assertTrue(is_array($received[8]));
+        $this->assertLessThanOrEqual($maximum, count($received[8]));
+
+        // try to pick newest message
+        $newest = reset($received[8]);
+        if ($newest === false) {
+            $client->close();
+            $this->markTestSkipped('No newer messages found?');
+        }
+
         $this->assertTrue($newest instanceof Message);
 
         $client->close();
