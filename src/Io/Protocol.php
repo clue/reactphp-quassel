@@ -4,6 +4,8 @@ namespace Clue\React\Quassel\Io;
 
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\Reader;
+use Clue\React\Quassel\Models\BufferInfo;
+use Clue\React\Quassel\Models\Message;
 
 /** @internal */
 abstract class Protocol
@@ -55,12 +57,12 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'BufferInfo' => function (Reader $reader) {
-                return array(
-                    'id'      => $reader->readUInt(),
-                    'network' => $reader->readUInt(),
-                    'type'    => $reader->readUShort(),
-                    'group'   => $reader->readUInt(),
-                    'name'    => $reader->readQByteArray(),
+                return new BufferInfo(
+                    $reader->readUInt(),
+                    $reader->readUInt(),
+                    $reader->readUShort(),
+                    $reader->readUInt(),
+                    $reader->readQByteArray()
                 );
             },
             // all required by "Network" InitRequest
@@ -72,20 +74,14 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'Message' => function (Reader $reader) {
-                // create DateTime object with local time zone from given unix timestamp
-                $datetime = function ($timestamp) {
-                    $d = new \DateTime('@' . $timestamp);
-                    $d->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
-                    return $d;
-                };
-                return array(
-                    'id'         => $reader->readUInt(),
-                    'timestamp'  => $datetime($reader->readUInt()),
-                    'type'       => $reader->readUInt(),
-                    'flags'      => $reader->readUChar(),
-                    'bufferInfo' => $reader->readQUserTypeByName('BufferInfo'),
-                    'sender'     => $reader->readQByteArray(),
-                    'content'    => $reader->readQByteArray()
+                return new Message(
+                    $reader->readUInt(),
+                    $reader->readUInt(),
+                    $reader->readUInt(),
+                    $reader->readUChar(),
+                    $reader->readQUserTypeByName('BufferInfo'),
+                    $reader->readQByteArray(),
+                    $reader->readQByteArray()
                 );
             },
             'MsgId' => function (Reader $reader) {

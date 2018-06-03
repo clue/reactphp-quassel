@@ -3,6 +3,8 @@
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\Message;
+use Clue\React\Quassel\Models\BufferInfo;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -36,9 +38,10 @@ $factory->createClient($uri)->then(function (Client $client) {
             }
 
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
-                if ($buffer['type'] === 2) { // type == 4 for user
-                    var_dump('requesting IrcChannel for ' . $buffer['name']);
-                    $client->writeInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
+                assert($buffer instanceof BufferInfo);
+                if ($buffer->getType() === BufferInfo::TYPE_CHANNEL) {
+                    var_dump('requesting IrcChannel for ' . $buffer->getName());
+                    $client->writeInitRequest('IrcChannel', $buffer->getNetworkId() . '/' . $buffer->getId());
                 }
             }
 
@@ -58,8 +61,9 @@ $factory->createClient($uri)->then(function (Client $client) {
         }
 
         if ($type === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
-            $data = $message[2];
-            echo $data['timestamp']->format(\DateTime::ISO8601) . ' in ' . $data['bufferInfo']['name'] . ' by ' . explode('!', $data['sender'], 2)[0] . ': ' . $data['content'] . PHP_EOL;
+            $in = $message[2];
+            assert($in instanceof Message);
+            echo date(DATE_ISO8601, $in->getTimestamp()) . ' in ' . $in->getBufferInfo()->getName() . ' by ' . explode('!', $in->getSender())[0] . ': ' . $in->getContents() . PHP_EOL;
 
             return;
         }
