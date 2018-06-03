@@ -10,6 +10,7 @@ use Evenement\EventEmitter;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
+use Clue\React\Quassel\Models\BufferInfoModel;
 
 class Client extends EventEmitter implements DuplexStreamInterface
 {
@@ -191,7 +192,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
-    public function writeBufferInput($bufferInfo, $input)
+    public function writeBufferInput(BufferInfoModel $bufferInfo, $input)
     {
         return $this->write(array(
             Protocol::REQUEST_RPCCALL,

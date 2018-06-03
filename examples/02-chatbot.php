@@ -3,6 +3,7 @@
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\MessageModel;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -43,11 +44,12 @@ $factory->createClient($uri)->then(function (Client $client) use ($keyword) {
         // chat message received
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
             $data = $message[2];
+            assert($data instanceof MessageModel);
 
-            if (strpos($data['content'], $keyword) !== false) {
-                $client->writeBufferInput($data['bufferInfo'], 'Hello from clue/quassel-react :-)');
+            if (strpos($data->getContents(), $keyword) !== false) {
+                $client->writeBufferInput($data->getBufferInfo(), 'Hello from clue/quassel-react :-)');
 
-                echo date('Y-m-d H:i:s') . ' Replied to ' . $data['bufferInfo']['name'] . '/' . explode('!', $data['sender'], 2)[0] . ': "' . $data['content'] . '"' . PHP_EOL;
+                echo date('Y-m-d H:i:s') . ' Replied to ' . $data->getBufferInfo()->getName() . '/' . explode('!', $data->getSender())[0] . ': "' . $data->getContents() . '"' . PHP_EOL;
             }
         }
     });

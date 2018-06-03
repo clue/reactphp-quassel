@@ -3,6 +3,7 @@
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\MessageModel;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -65,26 +66,27 @@ $factory->createClient($uri)->then(function (Client $client) {
         // chat message received
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
             $data = $message[2];
+            assert($data instanceof MessageModel);
             $reply = null;
 
             // we may be connected to multiple networks with different nicks
             // find correct nick for current network
-            $nick = isset($nicks[$data['bufferInfo']['network']]) ? $nicks[$data['bufferInfo']['network']] : null;
+            $nick = isset($nicks[$data->getBufferInfo()->getNetworkId()]) ? $nicks[$data->getBufferInfo()->getNetworkId()] : null;
 
             // received "nick: ping" in any buffer/channel
-            if ($nick !== null && strtolower($data['content']) === ($nick . ': ping')) {
-                $reply = explode('!', $data['sender'], 2)[0] . ': pong :-)';
+            if ($nick !== null && strtolower($data->getContents()) === ($nick . ': ping')) {
+                $reply = explode('!', $data->getSender())[0] . ': pong :-)';
             }
 
             // received "ping" in direct query buffer (user to user)
-            if (strtolower($data['content']) === 'ping' && $data['bufferInfo']['type'] === 0x04) {
+            if (strtolower($data->getContents()) === 'ping' && $data->getBufferInfo()->getType() === 0x04) {
                 $reply = 'pong :-)';
             }
 
             if ($reply !== null) {
-                $client->writeBufferInput($data['bufferInfo'], $reply);
+                $client->writeBufferInput($data->getBufferInfo(), $reply);
 
-                echo date('Y-m-d H:i:s') . ' Replied to ' . $data['bufferInfo']['name'] . '/' . explode('!', $data['sender'], 2)[0] . ': "' . $data['content'] . '"' . PHP_EOL;
+                echo date('Y-m-d H:i:s') . ' Replied to ' . $data->getBufferInfo()->getName() . '/' . explode('!', $data->getSender())[0] . ': "' . $data->getContents() . '"' . PHP_EOL;
             }
         }
     });
