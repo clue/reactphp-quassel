@@ -3,6 +3,7 @@
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\BufferInfo;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -90,9 +91,10 @@ $factory->createClient($host)->then(function (Client $client) use ($user) {
             }
 
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
-                if ($buffer['type'] === 2) { // type == 4 for user
-                    var_dump('requesting IrcChannel for ' . $buffer['name']);
-                    $client->writeInitRequest('IrcChannel', $buffer['network'] . '/' . $buffer['id']);
+                assert($buffer instanceof BufferInfo);
+                if ($buffer->getType() === BufferInfo::TYPE_CHANNEL) {
+                    var_dump('requesting IrcChannel for ' . $buffer->getName());
+                    $client->writeInitRequest('IrcChannel', $buffer->getNetworkId() . '/' . $buffer->getId());
                 }
             }
 

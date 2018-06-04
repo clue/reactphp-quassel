@@ -90,12 +90,12 @@ abstract class Protocol
         );
 
         $this->userTypeWriter = array(
-            'BufferInfo' => function ($data, Writer $writer) {
-                $writer->writeUInt($data['id']);
-                $writer->writeUInt($data['network']);
-                $writer->writeUShort($data['type']);
-                $writer->writeUInt($data['group']);
-                $writer->writeQByteArray($data['name']);
+            'BufferInfo' => function (BufferInfo $buffer, Writer $writer) {
+                $writer->writeUInt($buffer->getId());
+                $writer->writeUInt($buffer->getNetworkId());
+                $writer->writeUShort($buffer->getType());
+                $writer->writeUInt($buffer->getGroupId());
+                $writer->writeQByteArray($buffer->getName());
             },
             'BufferId' => function ($data, Writer $writer) {
                 $writer->writeUInt($data);
