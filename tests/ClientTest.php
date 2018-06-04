@@ -1,7 +1,9 @@
 <?php
 
 use Clue\React\Quassel\Client;
+use Clue\React\Quassel\Io\DatastreamProtocol;
 use Clue\React\Quassel\Io\Protocol;
+use Clue\React\Quassel\Models\BufferInfo;
 use React\Stream\ThroughStream;
 
 class ClientTest extends TestCase
@@ -191,6 +193,18 @@ class ClientTest extends TestCase
     {
         $this->expectWriteMap();
         $this->client->writeCoreSetupData('user', 'pass', 'PQSql', array('password' => 'test'));
+    }
+
+    public function testWriteBufferInputWritesToStreamOnce()
+    {
+        $this->protocol = new DatastreamProtocol();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
+        $this->stream->expects($this->once())->method('write');
+
+        $bufferInfo = new BufferInfo(1, 2, 3, 4, '#test');
+
+        $this->client->writeBufferInput($bufferInfo, 'Hello!');
     }
 
     public function testWriteHeartBeatReply()
