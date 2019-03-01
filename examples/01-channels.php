@@ -56,9 +56,13 @@ $factory->createClient($uri)->then(function (Client $client) {
             unset($info->IrcUsersAndChannels);
             echo json_encode($info, JSON_PRETTY_PRINT) . PHP_EOL;
 
-            // print names of all known channels on this network
-            foreach ($message[3]->IrcUsersAndChannels->Channels->name as $name) {
-                echo $name . PHP_EOL;
+            // print names of all known channels on this network (if connected)
+            if (isset($message[3]->IrcUsersAndChannels->Channels)) {
+                foreach ($message[3]->IrcUsersAndChannels->Channels->name as $name) {
+                    echo $name . PHP_EOL;
+                }
+            } else {
+                echo 'No channels in ' . $message[3]->networkName . ' (disconnected)' . PHP_EOL;
             }
 
             // close connection after showing all networks
