@@ -92,9 +92,9 @@ $factory->createClient($host)->then(function (Client $client) use ($user) {
 
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
                 assert($buffer instanceof BufferInfo);
-                if ($buffer->getType() === BufferInfo::TYPE_CHANNEL) {
-                    var_dump('requesting IrcChannel for ' . $buffer->getName());
-                    $client->writeInitRequest('IrcChannel', $buffer->getNetworkId() . '/' . $buffer->getId());
+                if ($buffer->type === BufferInfo::TYPE_CHANNEL) {
+                    var_dump('requesting IrcChannel for ' . $buffer->name);
+                    $client->writeInitRequest('IrcChannel', $buffer->networkId . '/' . $buffer->id);
                 }
             }
 

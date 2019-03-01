@@ -34,16 +34,16 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
             $id = null;
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
                 assert($buffer instanceof BufferInfo);
-                $combined = $buffer->getNetworkId() . '/' . $buffer->getName();
-                if (($channel !== '' && $channel === $buffer->getName()) || $channel === (string)$buffer->getId() || $channel === $combined) {
-                    $id = $buffer->getId();
+                $combined = $buffer->networkId . '/' . $buffer->name;
+                if (($channel !== '' && $channel === $buffer->name) || $channel === (string)$buffer->id || $channel === $combined) {
+                    $id = $buffer->id;
                 }
             }
 
             // list all channels if channel could not be found
             if ($id === null && $channel !== '') {
                 echo 'Error: Could not find the given channel, see full list: ' . PHP_EOL;
-                var_dump($message['SessionState']['BufferInfos']) . PHP_EOL;
+                var_dump($message['SessionState']['BufferInfos']);
                 return $client->close();
             }
 
@@ -66,11 +66,11 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
 
                 echo json_encode(
                     array(
-                        'id' => $in->getId(),
-                        'date' => date(\DATE_ATOM, $in->getTimestamp()),
-                        'channel' => $in->getBufferInfo()->getName(),
-                        'sender' => explode('!', $in->getSender())[0],
-                        'contents' => $in->getContents()
+                        'id' => $in->id,
+                        'date' => date(\DATE_ATOM, $in->timestamp),
+                        'channel' => $in->bufferInfo->name,
+                        'sender' => explode('!', $in->sender)[0],
+                        'contents' => $in->contents
                     ),
                     JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE
                 ) . PHP_EOL;

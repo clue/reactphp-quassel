@@ -72,22 +72,22 @@ $factory->createClient($uri)->then(function (Client $client) {
 
             // we may be connected to multiple networks with different nicks
             // find correct nick for current network
-            $nick = isset($nicks[$in->getBufferInfo()->getNetworkId()]) ? $nicks[$in->getBufferInfo()->getNetworkId()] : null;
+            $nick = isset($nicks[$in->bufferInfo->networkId]) ? $nicks[$in->bufferInfo->networkId] : null;
 
             // received "nick: ping" in any buffer/channel
-            if ($nick !== null && strtolower($in->getContents()) === ($nick . ': ping')) {
-                $reply = explode('!', $in->getSender())[0] . ': pong :-)';
+            if ($nick !== null && strtolower($in->contents) === ($nick . ': ping')) {
+                $reply = explode('!', $in->sender)[0] . ': pong :-)';
             }
 
             // received "ping" in direct query buffer (user to user)
-            if (strtolower($in->getContents()) === 'ping' && $in->getBufferInfo()->getType() === BufferInfo::TYPE_QUERY) {
+            if (strtolower($in->contents) === 'ping' && $in->bufferInfo->type === BufferInfo::TYPE_QUERY) {
                 $reply = 'pong :-)';
             }
 
             if ($reply !== null) {
-                $client->writeBufferInput($in->getBufferInfo(), $reply);
+                $client->writeBufferInput($in->bufferInfo, $reply);
 
-                echo date('Y-m-d H:i:s') . ' Replied to ' . $in->getBufferInfo()->getName() . '/' . explode('!', $in->getSender())[0] . ': "' . $in->getContents() . '"' . PHP_EOL;
+                echo date('Y-m-d H:i:s') . ' Replied to ' . $in->bufferInfo->name . '/' . explode('!', $in->sender)[0] . ': "' . $in->contents . '"' . PHP_EOL;
             }
         }
     });

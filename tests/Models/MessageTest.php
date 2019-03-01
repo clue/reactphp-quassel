@@ -17,13 +17,13 @@ class MessageTest extends TestCase
             'Hello world!'
         );
 
-        $this->assertSame(1000, $message->getId());
-        $this->assertSame(1528039705, $message->getTimestamp());
-        $this->assertSame(Message::TYPE_PLAIN, $message->getType());
-        $this->assertSame(Message::FLAG_NONE, $message->getFlags());
-        $this->assertSame($buffer, $message->getBufferInfo());
-        $this->assertSame('another_clue!user@host', $message->getSender());
-        $this->assertSame('Hello world!', $message->getContents());
+        $this->assertSame(1000, $message->id);
+        $this->assertSame(1528039705, $message->timestamp);
+        $this->assertSame(Message::TYPE_PLAIN, $message->type);
+        $this->assertSame(Message::FLAG_NONE, $message->flags);
+        $this->assertSame($buffer, $message->bufferInfo);
+        $this->assertSame('another_clue!user@host', $message->sender);
+        $this->assertSame('Hello world!', $message->contents);
     }
 
     public function testJoinMessage()
@@ -39,12 +39,12 @@ class MessageTest extends TestCase
             '#reactphp'
         );
 
-        $this->assertSame(999, $message->getId());
-        $this->assertSame(1528039704, $message->getTimestamp());
-        $this->assertSame(Message::TYPE_JOIN, $message->getType());
-        $this->assertSame(Message::FLAG_NONE, $message->getFlags());
-        $this->assertSame($buffer, $message->getBufferInfo());
-        $this->assertSame('another_clue!user@host', $message->getSender());
-        $this->assertSame('#reactphp', $message->getContents());
+        $this->assertSame(999, $message->id);
+        $this->assertSame(1528039704, $message->timestamp);
+        $this->assertSame(Message::TYPE_JOIN, $message->type);
+        $this->assertSame(Message::FLAG_NONE, $message->flags);
+        $this->assertSame($buffer, $message->bufferInfo);
+        $this->assertSame('another_clue!user@host', $message->sender);
+        $this->assertSame('#reactphp', $message->contents);
     }
 }

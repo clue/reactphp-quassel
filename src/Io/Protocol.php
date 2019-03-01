@@ -91,11 +91,11 @@ abstract class Protocol
 
         $this->userTypeWriter = array(
             'BufferInfo' => function (BufferInfo $buffer, Writer $writer) {
-                $writer->writeUInt($buffer->getId());
-                $writer->writeUInt($buffer->getNetworkId());
-                $writer->writeUShort($buffer->getType());
-                $writer->writeUInt($buffer->getGroupId());
-                $writer->writeQByteArray($buffer->getName());
+                $writer->writeUInt($buffer->id);
+                $writer->writeUInt($buffer->networkId);
+                $writer->writeUShort($buffer->type);
+                $writer->writeUInt($buffer->groupId);
+                $writer->writeQByteArray($buffer->name);
             },
             'BufferId' => function ($data, Writer $writer) {
                 $writer->writeUInt($data);
