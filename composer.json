@@ -15,7 +15,7 @@
     },
     "require": {
     	"php": ">=5.3",
-        "clue/qdatastream": "^0.7.2",
+        "clue/qdatastream": "^0.8",
         "react/event-loop": "^1.0 || ^0.5 || ^0.4 || ^0.3",
         "react/promise": "~2.0|~1.1",
         "react/socket": "^1.0 || ^0.8 || ^0.7",

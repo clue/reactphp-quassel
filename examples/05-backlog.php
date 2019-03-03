@@ -29,10 +29,10 @@ $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
 $factory->createClient($uri)->then(function (Client $client) use ($channel) {
     $client->on('data', function ($message) use ($client, $channel) {
-        if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
+        if (isset($message->MsgType) && $message->MsgType === 'SessionInit') {
             // session initialized => search channel ID for given channel name
             $id = null;
-            foreach ($message['SessionState']['BufferInfos'] as $buffer) {
+            foreach ($message->SessionState->BufferInfos as $buffer) {
                 assert($buffer instanceof BufferInfo);
                 $combined = $buffer->networkId . '/' . $buffer->name;
                 if (($channel !== '' && $channel === $buffer->name) || $channel === (string)$buffer->id || $channel === $combined) {
@@ -43,7 +43,7 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
             // list all channels if channel could not be found
             if ($id === null && $channel !== '') {
                 echo 'Error: Could not find the given channel, see full list: ' . PHP_EOL;
-                var_dump($message['SessionState']['BufferInfos']);
+                var_dump($message->SessionState->BufferInfos);
                 return $client->close();
             }
 

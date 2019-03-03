@@ -188,7 +188,7 @@ Incoming events will be forwarded to registered event handler callbacks:
 
 ```php
 $client->on('data', function ($data) {
-    // process an incoming message (raw message array)
+    // process an incoming message (raw message object or array)
     var_dump($data);
 });
 
@@ -216,7 +216,7 @@ There are only few noticable exceptions to this rule:
 
 *   Incoming buffers/channels and chat messages use complex data models, so they
     are represented by `BufferInfo` and `Message` respectively. All other data
-    types use plain structured data, so you can access it's array-based
+    types use plain structured data, so you can access its object-based
     structure very similar to a JSON-like data structure.
 *   The legacy protocol uses plain times for heartbeat messages while the newer
     datastream protocol uses `DateTime` objects.

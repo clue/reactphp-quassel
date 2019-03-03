@@ -122,7 +122,7 @@ class Factory
 
                 $client->on('data', function ($message) use ($client, $pong, &$timer, &$await, $loop) {
                     // reply to incoming ping messages with pong
-                    if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT && $pong) {
+                    if (is_array($message) && isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEAT && $pong) {
                         $client->writeHeartBeatReply($message[1]);
                     }
 
@@ -147,14 +147,11 @@ class Factory
         return new Promise\Promise(function ($resolve, $reject) use ($client, $user, $pass) {
             // handle incoming response messages
             $client->on('data', $handler = function ($data) use ($resolve, $reject, $client, $user, $pass, &$handler) {
-                $type = null;
-                if (is_array($data) && isset($data['MsgType'])) {
-                    $type = $data['MsgType'];
-                }
+                $type = isset($data->MsgType) ? $data->MsgType : null;
 
                 // continue to login if connection is initialized
                 if ($type === 'ClientInitAck') {
-                    if (!isset($data['Configured']) || !$data['Configured']) {
+                    if (!isset($data->Configured) || !$data->Configured) {
                         $reject(new \RuntimeException('Unable to log in to unconfigured Quassel IRC core'));
                         return $client->close();
                     }
@@ -166,13 +163,13 @@ class Factory
 
                 // reject if core rejects initialization
                 if ($type === 'ClientInitReject') {
-                    $reject(new \RuntimeException('Connection rejected by Quassel core: ' . $data['Error']));
+                    $reject(new \RuntimeException('Connection rejected by Quassel core: ' . $data->Error));
                     return $client->close();
                 }
 
                 // reject promise if login is rejected
                 if ($type === 'ClientLoginReject') {
-                    $reject(new \RuntimeException('Unable to log in: ' . $data['Error']));
+                    $reject(new \RuntimeException('Unable to log in: ' . $data->Error));
                     return $client->close();
                 }
 

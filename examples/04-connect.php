@@ -29,15 +29,15 @@ $factory->createClient($uri)->then(function (Client $client) {
 
     $client->on('data', function ($message) use ($client) {
         // session initialized => initialize all networks and buffers
-        if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
+        if (isset($message->MsgType) && $message->MsgType === 'SessionInit') {
             var_dump('session initialized');
 
-            foreach ($message['SessionState']['NetworkIds'] as $nid) {
+            foreach ($message->SessionState->NetworkIds as $nid) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
                 $client->writeInitRequest("Network", $nid);
             }
 
-            foreach ($message['SessionState']['BufferInfos'] as $buffer) {
+            foreach ($message->SessionState->BufferInfos as $buffer) {
                 assert($buffer instanceof BufferInfo);
                 if ($buffer->type === BufferInfo::TYPE_CHANNEL) {
                     var_dump('requesting IrcChannel for ' . $buffer->name);

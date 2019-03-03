@@ -31,7 +31,7 @@ class DatastreamProtocolTest extends AbstractProtocolTest
         $message = array(Protocol::REQUEST_INITDATA, 'Network', '1', 'k1', 'v1', 'k2', 'v2');
 
         // the actual message interpretation (in line with legacy protocol wire format)
-        $expected = array(Protocol::REQUEST_INITDATA, 'Network', '1', array('k1' => 'v1', 'k2' => 'v2'));
+        $expected = array(Protocol::REQUEST_INITDATA, 'Network', '1', (object)array('k1' => 'v1', 'k2' => 'v2'));
 
         $this->assertEquals($expected, $this->protocol->parseVariantPacket($this->protocol->serializeVariantPacket($message)));
     }

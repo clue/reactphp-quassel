@@ -113,7 +113,7 @@ class FactoryIntegrationTest extends TestCase
         $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
             $data = FactoryIntegrationTest::decode($packet);
 
-            return (isset($data['MsgType']) && $data['MsgType'] === 'ClientInit');
+            return (isset($data->MsgType) && $data->MsgType === 'ClientInit');
         }));
 
         $server->on('connection', function (ConnectionInterface $conn) use ($data) {
@@ -274,7 +274,7 @@ class FactoryIntegrationTest extends TestCase
             $protocol = Protocol::createFromProbe(0x02);
             $data = $protocol->parseVariantPacket(substr($packet, 4));
 
-            return (isset($data['MsgType'], $data['User'], $data['Password']) && $data['MsgType'] === 'ClientLogin');
+            return (isset($data->MsgType, $data->User, $data->Password) && $data->MsgType === 'ClientLogin');
         }));
 
         $server->on('connection', function (ConnectionInterface $conn) use ($data) {

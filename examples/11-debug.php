@@ -28,24 +28,25 @@ $factory->createClient($host)->then(function (Client $client) use ($user) {
     $client->writeClientInit();
 
     $client->on('data', function ($message) use ($client, $user) {
-        if (isset($message[3]['IrcUsersAndChannels'])) {
+        if (is_array($message) && isset($message[3]->IrcUsersAndChannels)) {
             // print network information except for huge users/channels list
             $debug = $message;
-            unset($debug[3]['IrcUsersAndChannels']);
+            $debug[3] = clone $debug[3];
+            unset($debug[3]->IrcUsersAndChannels);
             echo 'Debug (shortened): ' . json_encode($debug, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . PHP_EOL;
         } else {
             echo 'Debug: ' . json_encode($message, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . PHP_EOL;
         }
 
         $type = null;
-        if (is_array($message) && isset($message['MsgType'])) {
-            $type = $message['MsgType'];
+        if (isset($message->MsgType)) {
+            $type = $message->MsgType;
         }
 
         if ($type === 'ClientInitAck') {
-            if (!$message['Configured']) {
+            if (!$message->Configured) {
                 echo '[3/5] Initialization done, but core is not configured yet, you may want to issue a setup call manually' . PHP_EOL;
-                print_r($message['StorageBackends']);
+                print_r($message->StorageBackends);
 
                 echo 'Hit enter to set-up server with defaults, otherwise cancel program now';
                 fgets(STDIN);
@@ -85,12 +86,12 @@ $factory->createClient($host)->then(function (Client $client) use ($user) {
         if ($type === 'SessionInit') {
             echo '[5/5] Session initialized, we are ready to go!' . PHP_EOL;
 
-            foreach ($message['SessionState']['NetworkIds'] as $nid) {
+            foreach ($message->SessionState->NetworkIds as $nid) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
                 $client->writeInitRequest("Network", $nid);
             }
 
-            foreach ($message['SessionState']['BufferInfos'] as $buffer) {
+            foreach ($message->SessionState->BufferInfos as $buffer) {
                 assert($buffer instanceof BufferInfo);
                 if ($buffer->type === BufferInfo::TYPE_CHANNEL) {
                     var_dump('requesting IrcChannel for ' . $buffer->name);

@@ -22,7 +22,7 @@ abstract class AbstractProtocolTest extends TestCase
 
         $packet = $this->protocol->serializeVariantPacket($in);
 
-        $this->assertEquals($in, $this->protocol->parseVariantPacket($packet));
+        $this->assertEquals($in, (array)$this->protocol->parseVariantPacket($packet));
     }
 
     public function testHeartBeatWithCorrectTimeZoneAndMillisecondAccuracy()
