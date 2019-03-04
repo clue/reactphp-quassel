@@ -217,7 +217,7 @@ class FunctionalTest extends TestCase
 
         // fetch newest messages for this buffer
         $this->assertTrue($buffer instanceof BufferInfo);
-        $client->writeBufferRequestBacklog($buffer->getId(), -1, -1, $maximum = 2, 0);
+        $client->writeBufferRequestBacklog($buffer->id, -1, -1, $maximum = 2, 0);
 
         $received = $this->awaitMessage($client);
         $this->assertTrue(isset($received[0]));
@@ -237,7 +237,7 @@ class FunctionalTest extends TestCase
 
         // poll for newer messages in all channels
         $this->assertTrue($newest instanceof Message);
-        $client->writeBufferRequestBacklogAll($newest->getId(), -1, $maximum, 0);
+        $client->writeBufferRequestBacklogAll($newest->id, -1, $maximum, 0);
 
         $received = $this->awaitMessage($client);
         $this->assertTrue(isset($received[0]));

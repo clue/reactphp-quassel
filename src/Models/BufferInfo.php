@@ -11,11 +11,30 @@ class BufferInfo
     const TYPE_QUERY = 0x04;
     const TYPE_GROUP = 0x08;
 
-    private $id;
-    private $networkId;
-    private $type;
-    private $groupId;
-    private $name;
+    /**
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var int
+     */
+    public $networkId;
+
+    /**
+     * @var int single type constant, see self::TYPE_*
+     */
+    public $type;
+
+    /**
+     * @var int
+     */
+    public $groupId;
+
+    /**
+     * @var string buffer/channel name `#channel` or `user` or empty string
+     */
+    public $name;
 
     /**
      * [Internal] Instantiation is handled internally and should not be called manually.
@@ -34,45 +53,5 @@ class BufferInfo
         $this->type = $type;
         $this->groupId = $groupId;
         $this->name = $name;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getNetworkId()
-    {
-        return $this->networkId;
-    }
-
-    /**
-     * @return int single type constant, see self::TYPE_*
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @return int
-     */
-    public function getGroupId()
-    {
-        return $this->groupId;
-    }
-
-    /**
-     * @return string buffer/channel name `#channel` or `user` or empty string
-     */
-    public function getName()
-    {
-        return $this->name;
     }
 }

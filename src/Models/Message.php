@@ -33,13 +33,40 @@ class Message
     const FLAG_STATUS_MESSAGE = 0x10;
     const FLAG_BACKLOG = 0x80;
 
-    private $id;
-    private $timestamp;
-    private $type;
-    private $flags;
-    private $bufferInfo;
-    private $sender;
-    private $contents;
+    /**
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var int UNIX timestamp
+     */
+    public $timestamp;
+
+    /**
+     * @var int single type constant, see self::TYPE_* constants
+     */
+    public $type;
+
+    /**
+     * @var int bitmask of flag constants, see self::FLAG_* constants
+     */
+    public $flags;
+
+    /**
+     * @var BufferInfo reference to the buffer/channel this message was received in
+     */
+    public $bufferInfo;
+
+    /**
+     * @var string `nick!user@host` or just host or empty string depending on type/flags
+     */
+    public $sender;
+
+    /**
+     * @var string message contents contains the chat message or info which may be empty depending on type
+     */
+    public $contents;
 
     /**
      * [Internal] Instantiation is handled internally and should not be called manually.
@@ -62,62 +89,5 @@ class Message
         $this->bufferInfo = $bufferInfo;
         $this->sender = $sender;
         $this->contents = $contents;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return int UNIX timestamp
-     */
-    public function getTimestamp()
-    {
-        return $this->timestamp;
-    }
-
-    /**
-     * @return int single type constant, see self::TYPE_* constants
-     */
-    public function getType()
-    {
-        return $this->type;
-    }
-
-    /**
-     * @return int bitmask of flag constants, see self::FLAG_* constants
-     */
-    public function getFlags()
-    {
-        return $this->flags;
-    }
-
-    /**
-     * @return BufferInfo reference to the buffer/channel this message was received in
-     */
-    public function getBufferInfo()
-    {
-        return $this->bufferInfo;
-    }
-
-    /**
-     * @return string `nick!user@host` or just host or empty string depending on type/flags
-     * @see self::getSenderNick()
-     */
-    public function getSender()
-    {
-        return $this->sender;
-    }
-
-    /**
-     * @return string message contents contains the chat message or info which may be empty depending on type
-     */
-    public function getContents()
-    {
-        return $this->contents;
     }
 }

@@ -227,7 +227,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
      * in this array and pass this to this method as `$messageIdLast`.
      *
      * ```php
-     * $oldest = end($messages)->getId();
+     * $oldest = end($messages)->id;
      * $client->writeBufferRequestBacklog($id, -1, $oldest, 20, 0);
      * ```
      *
@@ -240,7 +240,7 @@ class Client extends EventEmitter implements DuplexStreamInterface
      * will contain the given message ID as the only entry.
      *
      * ```php
-     * $newest = reset($messages)->getId();
+     * $newest = reset($messages)->id;
      * $client->writeBufferRequestBacklog($id, $newest, -1, 20, 0);
      * ```
      *

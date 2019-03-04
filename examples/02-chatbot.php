@@ -46,10 +46,10 @@ $factory->createClient($uri)->then(function (Client $client) use ($keyword) {
             $in = $message[2];
             assert($in instanceof Message);
 
-            if (strpos($in->getContents(), $keyword) !== false) {
-                $client->writeBufferInput($in->getBufferInfo(), 'Hello from clue/quassel-react :-)');
+            if (strpos($in->contents, $keyword) !== false) {
+                $client->writeBufferInput($in->bufferInfo, 'Hello from clue/quassel-react :-)');
 
-                echo date('Y-m-d H:i:s') . ' Replied to ' . $in->getBufferInfo()->getName() . '/' . explode('!', $in->getSender())[0] . ': "' . $in->getContents() . '"' . PHP_EOL;
+                echo date('Y-m-d H:i:s') . ' Replied to ' . $in->bufferInfo->name . '/' . explode('!', $in->sender)[0] . ': "' . $in->contents . '"' . PHP_EOL;
             }
         }
     });

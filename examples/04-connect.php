@@ -39,9 +39,9 @@ $factory->createClient($uri)->then(function (Client $client) {
 
             foreach ($message['SessionState']['BufferInfos'] as $buffer) {
                 assert($buffer instanceof BufferInfo);
-                if ($buffer->getType() === BufferInfo::TYPE_CHANNEL) {
-                    var_dump('requesting IrcChannel for ' . $buffer->getName());
-                    $client->writeInitRequest('IrcChannel', $buffer->getNetworkId() . '/' . $buffer->getId());
+                if ($buffer->type === BufferInfo::TYPE_CHANNEL) {
+                    var_dump('requesting IrcChannel for ' . $buffer->name);
+                    $client->writeInitRequest('IrcChannel', $buffer->networkId . '/' . $buffer->id);
                 }
             }
 
@@ -63,7 +63,7 @@ $factory->createClient($uri)->then(function (Client $client) {
         if ($type === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
             $in = $message[2];
             assert($in instanceof Message);
-            echo date(DATE_ISO8601, $in->getTimestamp()) . ' in ' . $in->getBufferInfo()->getName() . ' by ' . explode('!', $in->getSender())[0] . ': ' . $in->getContents() . PHP_EOL;
+            echo date(DATE_ISO8601, $in->timestamp) . ' in ' . $in->bufferInfo->name . ' by ' . explode('!', $in->sender)[0] . ': ' . $in->contents . PHP_EOL;
 
             return;
         }
