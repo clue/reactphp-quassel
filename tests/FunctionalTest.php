@@ -222,6 +222,13 @@ class FunctionalTest extends TestCase
         $received = $this->awaitMessage($client);
         $this->assertTrue(isset($received[0]));
         $this->assertSame(1, $received[0]);
+
+        // Quassel v0.13+ receives a `CoreInfo` at the beginning of the session,
+        // so we await the next message
+        if ($received[1] === 'CoreInfo') {
+            $received = $this->awaitMessage($client);
+        }
+
         $this->assertSame('BacklogManager', $received[1]);
         $this->assertSame('receiveBacklog', $received[3]);
         $this->assertSame($maximum, $received[7]);
