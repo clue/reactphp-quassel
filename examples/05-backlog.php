@@ -81,6 +81,11 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
             return;
         }
 
+        // ignore initial CoreInfo reporting connected clients for Quassel v0.13+
+        if (is_array($message) && isset($message[1]) && $message[1] === 'CoreInfo') {
+            return;
+        }
+
         echo 'received unexpected: ' . json_encode($message, JSON_PRETTY_PRINT) . PHP_EOL;
     });
 
