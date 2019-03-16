@@ -84,15 +84,15 @@ class DatastreamProtocol extends Protocol
      * converts the given list to a map
      *
      * @param mixed[]|array<mixed> $list
-     * @return mixed[]|array<mixed>
+     * @return \stdClass `map<string,mixed>`
      * @internal
      */
-    public function listToMap($list)
+    public function listToMap(array $list)
     {
         $map = array();
         for ($i = 0, $n = count($list); $i < $n; $i += 2) {
             $map[$list[$i]] = $list[$i + 1];
         }
-        return $map;
+        return (object)$map;
     }
 }

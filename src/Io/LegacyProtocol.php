@@ -39,16 +39,16 @@ class LegacyProtocol extends Protocol
 
         // ping requests will actually be sent as QTime which assumes UTC timezone
         // times will be returned with local timezone, so account for offset to UTC
-        if (isset($data[0]) && ($data[0] === self::REQUEST_HEARTBEAT || $data[0] === self::REQUEST_HEARTBEATREPLY)) {
+        if (is_array($data) && isset($data[0]) && ($data[0] === self::REQUEST_HEARTBEAT || $data[0] === self::REQUEST_HEARTBEATREPLY)) {
             $data[1]->modify($data[1]->getOffset() .  ' seconds');
         }
 
         // upcast legacy InitData for "Network" to newer datagram variant
         // https://github.com/quassel/quassel/commit/208ccb6d91ebb3c26a67c35c11411ba3ab27708a#diff-c3c5a4e63a0b757912ba28686747b040
-        if (isset($data[0]) && $data[0] === self::REQUEST_INITDATA && $data[1] === 'Network' && isset($data[3]['IrcUsersAndChannels'])) {
+        if (is_array($data) && isset($data[0]) && $data[0] === self::REQUEST_INITDATA && $data[1] === 'Network' && isset($data[3]->IrcUsersAndChannels)) {
             $new = array();
             // $type would be "users" and "channels"
-            foreach ($data[3]['IrcUsersAndChannels'] as $type => $all) {
+            foreach ($data[3]->IrcUsersAndChannels as $type => $all) {
                 $map = array();
 
                 // iterate over all users/channels
@@ -60,11 +60,11 @@ class LegacyProtocol extends Protocol
                 }
 
                 // store new map with uppercase Users/Channels
-                $new[ucfirst($type)] = $map;
+                $new[ucfirst($type)] = (object)$map;
             }
 
             // make sure new structure comes first
-            $data[3] = array('IrcUsersAndChannels' => $new) + $data[3];
+            $data[3] = (object)(array('IrcUsersAndChannels' => (object)$new) + (array)$data[3]);
         }
 
         return $data;

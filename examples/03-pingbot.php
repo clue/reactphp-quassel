@@ -31,10 +31,10 @@ $factory->createClient($uri)->then(function (Client $client) {
 
     $client->on('data', function ($message) use ($client, &$nicks) {
         // session initialized => initialize all networks
-        if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
+        if (isset($message->MsgType) && $message->MsgType === 'SessionInit') {
             var_dump('session initialized, now waiting for incoming messages');
 
-            foreach ($message['SessionState']['NetworkIds'] as $nid) {
+            foreach ($message->SessionState->NetworkIds as $nid) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
                 $client->writeInitRequest("Network", $nid);
             }
@@ -44,9 +44,9 @@ $factory->createClient($uri)->then(function (Client $client) {
 
         // network information received, remember nick used on this network
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_INITDATA && $message[1] === 'Network') {
-            $nicks[$message[2]] = $message[3]['myNick'];
+            $nicks[$message[2]] = $message[3]->myNick;
 
-            echo 'Network ' . $message[2] .' nick: ' . $message[3]['myNick'] . PHP_EOL;
+            echo 'Network ' . $message[2] .' nick: ' . $message[3]->myNick . PHP_EOL;
 
             return;
         }

@@ -35,7 +35,7 @@ $factory->createClient($uri)->then(function (Client $client) use ($keyword) {
 
     $client->on('data', function ($message) use ($client, $keyword) {
         // session initialized
-        if (isset($message['MsgType']) && $message['MsgType']=== 'SessionInit') {
+        if (isset($message->MsgType) && $message->MsgType === 'SessionInit') {
             var_dump('session initialized, now waiting for incoming messages');
 
             return;

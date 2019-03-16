@@ -26,7 +26,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
             '1',
             $data = array(
                 'a' => 1,
-                'IrcUsersAndChannels' => array(),
+                'IrcUsersAndChannels' => (object)array(),
                 'b' => 2,
             )
         ));
@@ -36,8 +36,8 @@ class LegacyProtocolTest extends AbstractProtocolTest
         $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(4, $values);
-        $this->assertCount(3, $values[3]);
-        $this->assertEquals($data, $values[3]);
+        $this->assertCount(3, (array)$values[3]);
+        $this->assertEquals($data, (array)$values[3]);
     }
 
     public function testInitDataNetworkUpcastToNewDatastreamFormat()
@@ -70,9 +70,9 @@ class LegacyProtocolTest extends AbstractProtocolTest
         $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(4, $values);
-        $this->assertCount(3, $values[3]);
+        $this->assertCount(3, (array)$values[3]);
 
-        $expected = array('Users' => array(
+        $expected = (object)array('Users' => (object)array(
             'nick' => array(
                 'a',
                 'b'
@@ -82,7 +82,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
                 false
             )
         ));
-        $this->assertEquals($expected, $values[3]['IrcUsersAndChannels']);
+        $this->assertEquals($expected, $values[3]->IrcUsersAndChannels);
     }
 
     /**

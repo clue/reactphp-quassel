@@ -29,10 +29,10 @@ $factory->createClient($uri)->then(function (Client $client) {
 
     $client->on('data', function ($message) use ($client, &$await) {
         // session initialized => initialize all networks
-        if (isset($message['MsgType']) && $message['MsgType'] === 'SessionInit') {
+        if (isset($message->MsgType) && $message->MsgType === 'SessionInit') {
             var_dump('session initialized');
 
-            foreach ($message['SessionState']['NetworkIds'] as $nid) {
+            foreach ($message->SessionState->NetworkIds as $nid) {
                 var_dump('requesting Network for ' . $nid . ', this may take a few seconds');
                 $client->writeInitRequest("Network", $nid);
 
@@ -52,12 +52,12 @@ $factory->createClient($uri)->then(function (Client $client) {
         // network information received
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_INITDATA && $message[1] === 'Network') {
             // print network information except for huge users/channels list
-            $info = $message[3];
-            unset($info['IrcUsersAndChannels']);
+            $info = clone $message[3];
+            unset($info->IrcUsersAndChannels);
             echo json_encode($info, JSON_PRETTY_PRINT) . PHP_EOL;
 
             // print names of all known channels on this network
-            foreach ($message[3]['IrcUsersAndChannels']['Channels']['name'] as $name) {
+            foreach ($message[3]->IrcUsersAndChannels->Channels->name as $name) {
                 echo $name . PHP_EOL;
             }
 

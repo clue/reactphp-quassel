@@ -67,7 +67,7 @@ class FunctionalTest extends TestCase
         $client->writeClientInit();
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('ClientInitAck', $message['MsgType']);
+        $this->assertEquals('ClientInitAck', $message->MsgType);
 
         return $message;
     }
@@ -77,18 +77,18 @@ class FunctionalTest extends TestCase
      * @depends testWriteClientInit
      *
      * @param Client $client
-     * @param array  $message
+     * @param stdClass $message
      */
-    public function testWriteCoreSetupData(Client $client, $message)
+    public function testWriteCoreSetupData(Client $client, stdClass $message)
     {
-        if ($message['Configured']) {
+        if ($message->Configured) {
             $this->markTestSkipped('Given core already configured, can not set-up');
         }
 
         $client->writeCoreSetupData(self::$username, self::$password);
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('CoreSetupAck', $message['MsgType']);
+        $this->assertEquals('CoreSetupAck', $message->MsgType);
 
         return $message;
     }
@@ -98,17 +98,17 @@ class FunctionalTest extends TestCase
      * @depends testWriteClientInit
      *
      * @param Client $client
-     * @param array  $message
+     * @param stdClass $message
      */
-    public function testWriteClientLogin(Client $client, $message)
+    public function testWriteClientLogin(Client $client, stdClass $message)
     {
         $client->writeClientLogin(self::$username, self::$password);
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('ClientLoginAck', $message['MsgType']);
+        $this->assertEquals('ClientLoginAck', $message->MsgType);
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('SessionInit', $message['MsgType']);
+        $this->assertEquals('SessionInit', $message->MsgType);
 
         return $message;
     }
@@ -125,7 +125,7 @@ class FunctionalTest extends TestCase
 
         $promise = new Promise(function ($resolve) use ($client) {
             $callback = function ($message) use ($resolve, &$callback, $client) {
-                if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                if (is_array($message) && isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
                     $client->removeListener('data', $callback);
                     $resolve($message[1]);
                 }
@@ -150,7 +150,7 @@ class FunctionalTest extends TestCase
     {
         $promise = new Promise(function ($resolve) use ($client) {
             $callback = function ($message) use ($resolve, &$callback, $client) {
-                if (isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
+                if (is_array($message) && isset($message[0]) && $message[0] === Protocol::REQUEST_HEARTBEATREPLY) {
                     $client->removeListener('data', $callback);
                     $resolve($message[1]);
                 }
@@ -191,7 +191,7 @@ class FunctionalTest extends TestCase
         $client = Block\await($promise, self::$loop, 10.0);
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('SessionInit', $message['MsgType']);
+        $this->assertEquals('SessionInit', $message->MsgType);
 
         $client->close();
     }
@@ -206,10 +206,10 @@ class FunctionalTest extends TestCase
         /* @var $client Client */
 
         $message = $this->awaitMessage($client);
-        $this->assertEquals('SessionInit', $message['MsgType']);
+        $this->assertEquals('SessionInit', $message->MsgType);
 
         // try to pick first buffer
-        $buffer = reset($message['SessionState']['BufferInfos']);
+        $buffer = reset($message->SessionState->BufferInfos);
         if ($buffer === false) {
             $client->close();
             $this->markTestSkipped('Empty quassel core with no buffers?');
