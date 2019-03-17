@@ -67,7 +67,7 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
                 echo json_encode(
                     array(
                         'id' => $in->id,
-                        'date' => date(\DATE_ATOM, $in->timestamp),
+                        'date' => $in->timestamp->format(\DATE_ATOM),
                         'channel' => $in->bufferInfo->name,
                         'sender' => explode('!', $in->sender)[0],
                         'contents' => $in->contents

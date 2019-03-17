@@ -63,7 +63,7 @@ $factory->createClient($uri)->then(function (Client $client) {
         if ($type === Protocol::REQUEST_RPCCALL && $message[1] === '2displayMsg(Message)') {
             $in = $message[2];
             assert($in instanceof Message);
-            echo date(DATE_ISO8601, $in->timestamp) . ' in ' . $in->bufferInfo->name . ' by ' . explode('!', $in->sender)[0] . ': ' . $in->contents . PHP_EOL;
+            echo $in->timestamp->format(DATE_ISO8601) . ' in ' . $in->bufferInfo->name . ' by ' . explode('!', $in->sender)[0] . ': ' . $in->contents . PHP_EOL;
 
             return;
         }
