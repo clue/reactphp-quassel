@@ -357,6 +357,25 @@ class Client extends EventEmitter implements DuplexStreamInterface
         ));
     }
 
+    /**
+     * Permanently removes the network identified by the given network ID.
+     *
+     * Will be followed by `[2,"2networkRemoved(NetworkId)",4]` on success.
+     *
+     * See "SessionInit" or `BufferInfo` for possible network IDs to remove.
+     *
+     * @param int $networkId
+     * @return bool
+     */
+    public function writeNetworkRemove($networkId)
+    {
+        return $this->write(array(
+            Protocol::REQUEST_RPCCALL,
+            "2removeNetwork(NetworkId)",
+            new QVariant($networkId, 'NetworkId')
+        ));
+    }
+
     public function isReadable()
     {
         return $this->stream->isReadable();
