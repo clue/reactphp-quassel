@@ -41,24 +41,54 @@ class DatastreamProtocol extends Protocol
         $reader = new Reader($packet, $this->userTypeReader);
 
         // datastream protocol always uses list contents (even for maps)
-        $value = $reader->readQVariantList();
+        $data = $reader->readQVariantList();
 
         // if the first element is a string, then this is actually a map transported as a list
         // actual lists will always start with an integer request type
-        if (is_string($value[0])) {
+        if (is_string($data[0])) {
             // datastream protocol uses lists with UTF-8 keys
             // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L109
-            return $this->listToMap($value);
+            return $this->listToMap($data);
         }
 
-        if ($value[0] === self::REQUEST_INITDATA) {
+        if ($data[0] === self::REQUEST_INITDATA) {
             // make sure InitData is in line with legacy protocol wire format
             // first 3 elements are unchanged, everything else should be a map
             // https://github.com/quassel/quassel/blob/master/src/common/protocols/datastream/datastreampeer.cpp#L383
-            return array_slice($value, 0, 3) + array(3 => $this->listToMap(array_slice($value, 3)));
+            $data = array_slice($data, 0, 3) + array(3 => $this->listToMap(array_slice($data, 3)));
         }
 
-        return $value;
+        // Don't downcast newer datagram InitData for "Network" to older legacy variant.
+        // The datastream protocol uses a much more network-efficient wire-protocol
+        // which avoids repeating the same keys over and over again, but this
+        // format is very hard to work with from a consumer's perspective.
+        // Instead, we use a "logic" representation of the data inspired by the legacy protocol:
+        // The "IrcUsersAndChannels" structure always contains the keys "Users" and "Channels"
+        // both keys always consist of a list of objects with additional details.
+        // https://github.com/quassel/quassel/commit/208ccb6d91ebb3c26a67c35c11411ba3ab27708a#diff-c3c5a4e63a0b757912ba28686747b040
+        if (is_array($data) && isset($data[0]) && $data[0] === self::REQUEST_INITDATA && $data[1] === 'Network' && isset($data[3]->IrcUsersAndChannels)) {
+            $new = (object)array(
+                'Users' => array(),
+                'Channels' => array()
+            );
+            foreach ($data[3]->IrcUsersAndChannels as $type => $all) {
+                // each type is logically represented by a list of objects
+                // initialize with empty list even if no records are found at all
+                $list = array();
+                foreach ($all as $key => $values) {
+                    foreach ($values as $i => $value) {
+                        if (!isset($list[$i])) {
+                            $list[$i] = new \stdClass();
+                        }
+                        $list[$i]->$key = $value;
+                    }
+                }
+                $new->$type = $list;
+            }
+            $data[3]->IrcUsersAndChannels = $new;
+        }
+
+        return $data;
     }
 
     /**

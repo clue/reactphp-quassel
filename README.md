@@ -221,11 +221,11 @@ There are only few noticable exceptions to this rule:
 *   The legacy protocol uses plain times for heartbeat messages while the newer
     datastream protocol uses `DateTime` objects.
     This library always converts this to `DateTime` for consistency reasons.
-*   The legacy protocol uses excessive map structures for initial "Network"
-    synchronization, while the newer datastream protocol users optimized list
-    structures to avoid repeatedly sending the same keys.
-    This library always exposes the legacy protocol format in the same way as
-    the newer datastream protocol for consistency reasons.
+*   The initial `Network` synchronization uses different structures for the
+    `IrcUsersAndChannels` format structures depending on which wire-protocol is
+    used. This library always exposes this structure in its simpler "logic" form
+    for consistency reasons. This means it always contains the keys `Users` and
+    `Channels` which both contain a list of objects decribing each element.
 
 This combined basically means that you should always get consistent `data`
 events for both the legacy protocol and the newer datastream protocol.
