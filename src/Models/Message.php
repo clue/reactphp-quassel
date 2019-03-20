@@ -39,7 +39,7 @@ class Message
     public $id;
 
     /**
-     * @var int UNIX timestamp
+     * @var \DateTime
      */
     public $timestamp;
 
@@ -72,7 +72,7 @@ class Message
      * [Internal] Instantiation is handled internally and should not be called manually.
      *
      * @param int        $id
-     * @param int        $timestamp  UNIX timestamp
+     * @param \DateTime  $timestamp
      * @param int        $type       single type constant, see self::TYPE_* constants
      * @param int        $flags      bitmask of flag constants, see self::FLAG_* constants
      * @param BufferInfo $bufferInfo
@@ -80,7 +80,7 @@ class Message
      * @param string     $contents
      * @internal
      */
-    public function __construct($id, $timestamp, $type, $flags, BufferInfo $bufferInfo, $sender, $contents)
+    public function __construct($id, \DateTime $timestamp, $type, $flags, BufferInfo $bufferInfo, $sender, $contents)
     {
         $this->id = $id;
         $this->timestamp = $timestamp;

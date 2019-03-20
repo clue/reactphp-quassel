@@ -74,9 +74,16 @@ abstract class Protocol
                 return $reader->readUInt();
             },
             'Message' => function (Reader $reader) {
+                $readTimestamp = function () use ($reader) {
+                    // create DateTime object with local time zone from unix timestamp
+                    $d = new \DateTime('@' . $reader->readUint());
+                    $d->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
+                    return $d;
+                };
+
                 return new Message(
                     $reader->readUInt(),
-                    $reader->readUInt(),
+                    $readTimestamp(),
                     $reader->readUInt(),
                     $reader->readUChar(),
                     $reader->readQUserTypeByName('BufferInfo'),

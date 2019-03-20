@@ -263,6 +263,7 @@ class FunctionalTest extends TestCase
         }
 
         $this->assertTrue($newest instanceof Message);
+        $this->assertInstanceOf('DateTime', $newest->timestamp);
 
         $client->close();
     }
