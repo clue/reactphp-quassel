@@ -102,6 +102,9 @@ abstract class Protocol
             },
             'MsgId' => function ($data, Writer $writer) {
                 $writer->writeUInt($data);
+            },
+            'NetworkId' => function ($data, Writer $writer) {
+                $writer->writeUInt($data);
             }
         );
     }
