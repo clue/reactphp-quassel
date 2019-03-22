@@ -42,11 +42,24 @@ $factory->createClient($uri)->then(function (Client $client) {
             return;
         }
 
+        // new network created => initialize network (deleting will disconnect first, see below)
+        // [2,"2networkCreated(NetworkId)",7]
+        if (isset($message[0]) && $message[0] === Protocol::REQUEST_RPCCALL && $message[1] === '2networkCreated(NetworkId)') {
+            var_dump('requesting Network for ' . $message[2] . ', this may take a few seconds');
+            $client->writeInitRequest("Network", $message[2]);
+
+            return;
+        }
+
         // network information received, remember nick used on this network
         if (isset($message[0]) && $message[0] === Protocol::REQUEST_INITDATA && $message[1] === 'Network') {
-            $nicks[$message[2]] = $message[3]->myNick;
+            if (isset($message[3]->myNick)) {
+                $nicks[$message[2]] = $message[3]->myNick;
 
-            echo 'Network ' . $message[2] .' nick: ' . $message[3]->myNick . PHP_EOL;
+                echo 'Network ' . $message[2] .' nick: ' . $message[3]->myNick . PHP_EOL;
+            } else {
+                echo 'Network ' . $message[2] . ' nick unknown (disconnected)' . PHP_EOL;
+            }
 
             return;
         }
@@ -59,6 +72,21 @@ $factory->createClient($uri)->then(function (Client $client) {
                 $nicks[$network] = explode('/', $message[3])[1];
 
                 echo 'Network ' . $network . ' nick: ' . $nicks[$network] . PHP_EOL;
+            }
+
+            return;
+        }
+
+        // update our nickname when connecting/disconnecting network
+        // [1,"Network","6","setMyNick",null]
+        if (isset($message[0]) && $message[0] === Protocol::REQUEST_SYNC && $message[1] === 'Network' && $message[3] === 'setMyNick') {
+            $network = (int)$message[2];
+            if (isset($message[4])) {
+                $nicks[$network] = $message[4];
+                echo 'Network ' . $network . ' nick: ' . $nicks[$network] . PHP_EOL;
+            } else {
+                unset($nicks[$network]);
+                echo 'Network ' . $network . ' nick unknown (disconnected)' . PHP_EOL;
             }
 
             return;
