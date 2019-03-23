@@ -54,4 +54,76 @@ class DatastreamProtocolTest extends AbstractProtocolTest
         $this->assertEquals(Protocol::REQUEST_HEARTBEAT, $values[0]);
         $this->assertEquals(new \DateTime('2016-09-24 16:20:00.123', new \DateTimeZone('Europe/Berlin')), $values[1]);
     }
+
+    public function testInitDataWillTurnArgumentListIntoMap()
+    {
+        $writer = new Writer();
+        $writer->writeQVariantList(array(
+            Protocol::REQUEST_INITDATA,
+            'Network',
+            '1',
+            'a',
+            1,
+            'b',
+            2
+        ));
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->parseVariantPacket($packet);
+
+        $this->assertCount(4, $values);
+        $this->assertCount(2, (array)$values[3]);
+
+        $expected = (object)array(
+            'a' => 1,
+            'b' => 2
+        );
+        $this->assertEquals($expected, $values[3]);
+    }
+
+    public function testInitDataNetworkUpcastedToLogicFormat()
+    {
+        $writer = new Writer();
+        $writer->writeQVariantList(array(
+            Protocol::REQUEST_INITDATA,
+            'Network',
+            '1',
+            'IrcUsersAndChannels',
+            array(
+                'Users' => array(
+                    'nick' => array(
+                        'a',
+                        'b'
+                    ),
+                    'here' => array(
+                        true,
+                        false
+                    )
+                )
+            )
+        ));
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->parseVariantPacket($packet);
+
+        $this->assertCount(4, $values);
+        $this->assertCount(1, (array)$values[3]);
+
+        $expected = (object)array(
+            'Users' => array(
+                (object)array(
+                    'nick' => 'a',
+                    'here' => true
+                ),
+                (object)array(
+                    'nick' => 'b',
+                    'here' => false
+                )
+            ),
+            'Channels' => array()
+        );
+        $this->assertEquals($expected, $values[3]->IrcUsersAndChannels);
+    }
 }

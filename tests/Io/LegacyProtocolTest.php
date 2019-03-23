@@ -17,7 +17,7 @@ class LegacyProtocolTest extends AbstractProtocolTest
         $this->assertTrue($this->protocol->isLegacy());
     }
 
-    public function testInitDataNetworkUnchangedWithEmptyUsersAndChannels()
+    public function testInitDataNetworkUnchangedWithoutUsersAndChannels()
     {
         $writer = new Writer();
         $writer->writeQVariant(array(
@@ -26,7 +26,6 @@ class LegacyProtocolTest extends AbstractProtocolTest
             '1',
             $data = array(
                 'a' => 1,
-                'IrcUsersAndChannels' => (object)array(),
                 'b' => 2,
             )
         ));
@@ -36,11 +35,11 @@ class LegacyProtocolTest extends AbstractProtocolTest
         $values = $this->protocol->parseVariantPacket($packet);
 
         $this->assertCount(4, $values);
-        $this->assertCount(3, (array)$values[3]);
+        $this->assertCount(2, (array)$values[3]);
         $this->assertEquals($data, (array)$values[3]);
     }
 
-    public function testInitDataNetworkUpcastToNewDatastreamFormat()
+    public function testInitDataNetworkUpcastedToLogicFormatFromEmptyUsersAndChannels()
     {
         $writer = new Writer();
         $writer->writeQVariant(array(
@@ -49,17 +48,9 @@ class LegacyProtocolTest extends AbstractProtocolTest
             '1',
             array(
                 'a' => 1,
-                'IrcUsersAndChannels' => array(
-                    'users' => array(
-                        'anything1' => array(
-                            'nick' => 'a',
-                            'here' => true
-                        ),
-                        'anything2' => array(
-                            'nick' => 'b',
-                            'here' => false
-                        )
-                    )
+                'IrcUsersAndChannels' => (object)array(
+                    'users' => (object)array(),
+                    'channels' => (object)array()
                 ),
                 'b' => 2,
             )
@@ -69,20 +60,59 @@ class LegacyProtocolTest extends AbstractProtocolTest
 
         $values = $this->protocol->parseVariantPacket($packet);
 
+        $data = array(
+            'Users' => array(),
+            'Channels' => array()
+        );
+
         $this->assertCount(4, $values);
         $this->assertCount(3, (array)$values[3]);
+        $this->assertEquals($data, (array)$values[3]->IrcUsersAndChannels);
+    }
 
-        $expected = (object)array('Users' => (object)array(
-            'nick' => array(
-                'a',
-                'b'
-            ),
-            'here' => array(
-                true,
-                false
+    public function testInitDataNetworkUpcastedToLogicFormatWithoutKeysFromUsersMap()
+    {
+        $writer = new Writer();
+        $writer->writeQVariant(array(
+            Protocol::REQUEST_INITDATA,
+            'Network',
+            '1',
+            array(
+                'a' => 1,
+                'IrcUsersAndChannels' => (object)array(
+                    'users' => (object)array(
+                        'a' => (object)array(
+                            'nick' => 'a'
+                        ),
+                        'b' => (object)array(
+                            'nick' => 'b'
+                        )
+                    ),
+                    'channels' => (object)array()
+                ),
+                'b' => 2,
             )
         ));
-        $this->assertEquals($expected, $values[3]->IrcUsersAndChannels);
+
+        $packet = (string)$writer;
+
+        $values = $this->protocol->parseVariantPacket($packet);
+
+        $data = array(
+            'Users' => array(
+                (object)array(
+                    'nick' => 'a'
+                ),
+                (object)array(
+                    'nick' => 'b'
+                )
+            ),
+            'Channels' => array()
+        );
+
+        $this->assertCount(4, $values);
+        $this->assertCount(3, (array)$values[3]);
+        $this->assertEquals($data, (array)$values[3]->IrcUsersAndChannels);
     }
 
     /**

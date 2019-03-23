@@ -43,28 +43,18 @@ class LegacyProtocol extends Protocol
             $data[1]->modify($data[1]->getOffset() .  ' seconds');
         }
 
-        // upcast legacy InitData for "Network" to newer datagram variant
+        // Don't upcast legacy InitData for "Network" to newer datagram variant.
+        // The legacy protocol uses a rather inefficient format which repeats the
+        // same keys for each and every object, but it's "logic" and easy to work with.
+        // We use a similar "logic" representation on the data:
+        // The "IrcUsersAndChannels" structure always contains the keys "Users" and "Channels"
+        // both keys always consist of a list of objects with additional details.
         // https://github.com/quassel/quassel/commit/208ccb6d91ebb3c26a67c35c11411ba3ab27708a#diff-c3c5a4e63a0b757912ba28686747b040
         if (is_array($data) && isset($data[0]) && $data[0] === self::REQUEST_INITDATA && $data[1] === 'Network' && isset($data[3]->IrcUsersAndChannels)) {
-            $new = array();
-            // $type would be "users" and "channels"
-            foreach ($data[3]->IrcUsersAndChannels as $type => $all) {
-                $map = array();
-
-                // iterate over all users/channels
-                foreach ($all as $one) {
-                    // iterate over all keys/values for this user/channel
-                    foreach ($one as $key => $value) {
-                        $map[$key][] = $value;
-                    }
-                }
-
-                // store new map with uppercase Users/Channels
-                $new[ucfirst($type)] = (object)$map;
-            }
-
-            // make sure new structure comes first
-            $data[3] = (object)(array('IrcUsersAndChannels' => (object)$new) + (array)$data[3]);
+            $data[3]->IrcUsersAndChannels = (object)array(
+                'Users' => array_values((array)$data[3]->IrcUsersAndChannels->users),
+                'Channels' => array_values((array)$data[3]->IrcUsersAndChannels->channels)
+            );
         }
 
         return $data;
