@@ -249,6 +249,16 @@ class ClientTest extends TestCase
         $this->client->writeHeartBeatRequest();
     }
 
+    public function testWriteNetworkRemoveWritesToStreamOnce()
+    {
+        $this->protocol = new DatastreamProtocol();
+        $this->client = new Client($this->stream, $this->protocol, $this->splitter);
+
+        $this->stream->expects($this->once())->method('write');
+
+        $this->client->writeNetworkRemove(10);
+    }
+
     private function expectWriteMap()
     {
         $this->protocol->expects($this->once())->method('serializeVariantPacket');
