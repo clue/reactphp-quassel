@@ -1,5 +1,7 @@
 <?php
 
+namespace Clue\Tests\React\Quassel\Io;
+
 use Clue\React\Quassel\Io\Protocol;
 use Clue\QDataStream\Writer;
 use Clue\QDataStream\QVariant;

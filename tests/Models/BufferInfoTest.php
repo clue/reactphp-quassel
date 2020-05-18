@@ -1,6 +1,9 @@
 <?php
 
+namespace Clue\Tests\React\Quassel\Models;
+
 use Clue\React\Quassel\Models\BufferInfo;
+use Clue\Tests\React\Quassel\TestCase;
 
 class BufferInfoTest extends TestCase
 {
