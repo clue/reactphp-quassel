@@ -25,7 +25,8 @@ env:
   - QUASSEL_HOST=127.0.0.1:4242
 
 install:
-  - sudo apt-get -qq update && sudo apt-get --no-install-recommends -qq install -y quassel-core
+  - sudo apt-get -qq update || true # update package list and ignore temporary network errors
+  - sudo apt-get --no-install-recommends -qq install -y quassel-core
   - composer install --no-interaction
 
 script:
