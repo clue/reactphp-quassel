@@ -1,5 +1,7 @@
 <?php
 
+namespace Clue\Tests\React\Quassel;
+
 use Clue\React\Block;
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Factory;
@@ -324,7 +326,7 @@ class FactoryIntegrationTest extends TestCase
                     // response with successful init
                     $conn->write(FactoryIntegrationTest::encode(array(
                         Protocol::REQUEST_HEARTBEAT,
-                        new DateTime('2018-05-29 23:05:00')
+                        new \DateTime('2018-05-29 23:05:00')
                     )));
                 });
             });
@@ -359,7 +361,7 @@ class FactoryIntegrationTest extends TestCase
                     // response with successful init
                     $conn->write(FactoryIntegrationTest::encode(array(
                         Protocol::REQUEST_HEARTBEAT,
-                        new DateTime('2018-05-29 23:05:00')
+                        new \DateTime('2018-05-29 23:05:00')
                     )));
                 });
             });

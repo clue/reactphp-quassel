@@ -1,5 +1,7 @@
 <?php
 
+namespace Clue\Tests\React\Quassel;
+
 use React\EventLoop\Factory as LoopFactory;
 use Clue\React\Quassel\Factory;
 use Clue\React\Block;
@@ -77,9 +79,9 @@ class FunctionalTest extends TestCase
      * @depends testWriteClientInit
      *
      * @param Client $client
-     * @param stdClass $message
+     * @param \stdClass $message
      */
-    public function testWriteCoreSetupData(Client $client, stdClass $message)
+    public function testWriteCoreSetupData(Client $client, \stdClass $message)
     {
         if ($message->Configured) {
             $this->markTestSkipped('Given core already configured, can not set-up');
@@ -98,9 +100,9 @@ class FunctionalTest extends TestCase
      * @depends testWriteClientInit
      *
      * @param Client $client
-     * @param stdClass $message
+     * @param \stdClass $message
      */
-    public function testWriteClientLogin(Client $client, stdClass $message)
+    public function testWriteClientLogin(Client $client, \stdClass $message)
     {
         $client->writeClientLogin(self::$username, self::$password);
 
@@ -163,7 +165,7 @@ class FunctionalTest extends TestCase
 
         $received = Block\await($promise, self::$loop, 10.0);
 
-        $this->assertTrue($received instanceof DateTime);
+        $this->assertTrue($received instanceof \DateTime);
         $this->assertEquals(microtime(true), $received->getTimestamp(), '', 2.0);
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+namespace Clue\Tests\React\Quassel;
+
 use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Io\DatastreamProtocol;
 use Clue\React\Quassel\Io\Protocol;

@@ -1,7 +1,10 @@
 <?php
 
+namespace Clue\Tests\React\Quassel\Io;
+
 use Clue\React\Quassel\Io\Protocol;
 use Clue\QDataStream\QVariant;
+use Clue\Tests\React\Quassel\TestCase;
 
 abstract class AbstractProtocolTest extends TestCase
 {
@@ -29,7 +32,7 @@ abstract class AbstractProtocolTest extends TestCase
     {
         date_default_timezone_set('Europe/Berlin');
 
-        $in = array(Protocol::REQUEST_HEARTBEAT, new DateTime('12:34:56.789'));
+        $in = array(Protocol::REQUEST_HEARTBEAT, new \DateTime('12:34:56.789'));
 
         $packet = $this->protocol->serializeVariantPacket($in);
 

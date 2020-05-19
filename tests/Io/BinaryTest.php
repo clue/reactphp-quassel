@@ -1,6 +1,9 @@
 <?php
 
+namespace Clue\Tests\React\Quassel\Io;
+
 use Clue\React\Quassel\Io\Binary;
+use Clue\Tests\React\Quassel\TestCase;
 
 class BinaryTest extends TestCase
 {

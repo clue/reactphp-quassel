@@ -1,6 +1,9 @@
 <?php
 
+namespace Clue\Tests\React\Quassel\Models;
+
 use Clue\React\Quassel\Models\Message;
+use Clue\Tests\React\Quassel\TestCase;
 
 class MessageTest extends TestCase
 {
@@ -9,7 +12,7 @@ class MessageTest extends TestCase
         $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfo')->disableOriginalConstructor()->getMock();
         $message = new Message(
             1000,
-            new DateTime('@1528039705'),
+            new \DateTime('@1528039705'),
             Message::TYPE_PLAIN,
             Message::FLAG_NONE,
             $buffer,
@@ -31,7 +34,7 @@ class MessageTest extends TestCase
         $buffer = $this->getMockBuilder('Clue\React\Quassel\Models\BufferInfo')->disableOriginalConstructor()->getMock();
         $message = new Message(
             999,
-            new DateTime('@1528039704'),
+            new \DateTime('@1528039704'),
             Message::TYPE_JOIN,
             Message::FLAG_NONE,
             $buffer,

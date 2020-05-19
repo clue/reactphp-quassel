@@ -13,6 +13,9 @@
     "autoload": {
         "psr-4": { "Clue\\React\\Quassel\\": "src/" }
     },
+    "autoload-dev": {
+        "psr-4": { "Clue\\Tests\\React\\Quassel\\": "tests/" }
+    },
     "require": {
     	"php": ">=5.3",
         "clue/qdatastream": "^0.8",
@@ -23,6 +26,6 @@
     },
     "require-dev": {
         "clue/block-react": "^1.1",
-        "phpunit/phpunit": "^6.4 || ^5.7 || ^4.8.35"
+        "phpunit/phpunit": "^7.0 || ^6.4 || ^5.7 || ^4.8.35"
     }
 }

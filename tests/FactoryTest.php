@@ -1,5 +1,7 @@
 <?php
 
+namespace Clue\Tests\React\Quassel;
+
 use Clue\React\Quassel\Factory;
 use React\Promise\Deferred;
 use Clue\React\Quassel\Io\Protocol;
