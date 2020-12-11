@@ -1,4 +1,6 @@
-# clue/reactphp-quassel [![Build Status](https://travis-ci.org/clue/reactphp-quassel.svg?branch=master)](https://travis-ci.org/clue/reactphp-quassel)
+# clue/reactphp-quassel
+
+[![CI status](https://github.com/clue/reactphp-quassel/workflows/CI/badge.svg)](https://github.com/clue/reactphp-quassel/actions)
 
 Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
 built on top of [ReactPHP](https://reactphp.org/).
