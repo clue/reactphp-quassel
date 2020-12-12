@@ -10,7 +10,15 @@ use React\Stream\ThroughStream;
 
 class ClientTest extends TestCase
 {
-    public function setUp()
+    private $stream;
+    private $protocol;
+    private $splitter;
+    private $client;
+
+    /**
+     * @before
+     */
+    public function setUpClient()
     {
         $this->stream = $this->getMockBuilder('React\Stream\DuplexStreamInterface')->getMock();
         $this->protocol = $this->getMockBuilder('Clue\React\Quassel\Io\Protocol')->disableOriginalConstructor()->getMock();
@@ -243,7 +251,7 @@ class ClientTest extends TestCase
             $that->assertEquals(Protocol::REQUEST_HEARTBEAT, $value[0]);
 
             $that->assertInstanceOf('DateTime', $value[1]);
-            $that->assertEquals(microtime(true), $value[1]->getTimestamp(), '', 2);
+            $that->assertEqualsDelta(microtime(true), $value[1]->getTimestamp(), 2);
             return true;
         }));
         $this->splitter->expects($this->once())->method('writePacket');

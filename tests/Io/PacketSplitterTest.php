@@ -9,7 +9,10 @@ class PacketSplitterTest extends TestCase
 {
     private $splitter;
 
-    public function setUp()
+    /**
+     * @before
+     */
+    public function setUpSplitter()
     {
         $this->splitter = new PacketSplitter();
     }
@@ -29,11 +32,9 @@ class PacketSplitterTest extends TestCase
         $this->splitter->push($packet, $this->expectCallableOnce());
     }
 
-    /**
-     * @expectedException OverflowException
-     */
     public function testWillThrowForHugePacket()
     {
+        $this->setExpectedException('OverflowException');
         $this->splitter->push("\xFF\xFF\xFF\xFF", $this->expectCallableNever());
     }
 }

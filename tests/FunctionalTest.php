@@ -20,7 +20,10 @@ class FunctionalTest extends TestCase
     private static $loop;
     private static $blocker;
 
-    public static function setUpBeforeClass()
+    /**
+     * @beforeClass
+     */
+    public static function setUpEnvironmentAndLoop()
     {
         if (!getenv('QUASSEL_HOST')) {
             return;
@@ -40,7 +43,10 @@ class FunctionalTest extends TestCase
         self::$loop = LoopFactory::create();
     }
 
-    public function setUp()
+    /**
+     * @before
+     */
+    public function setUpSkipOnMissingEnvironment()
     {
         if (!self::$host) {
             $this->markTestSkipped('No ENV QUASSEL_HOST (plus optionally QUASSEL_USER and QUASSEL_PASS) given');
@@ -170,7 +176,7 @@ class FunctionalTest extends TestCase
         $received = Block\await($promise, self::$loop, 10.0);
 
         $this->assertTrue($received instanceof \DateTime);
-        $this->assertEquals(microtime(true), $received->getTimestamp(), '', 2.0);
+        $this->assertEqualsDelta(microtime(true), $received->getTimestamp(), 2.0);
     }
 
     /**
@@ -274,9 +280,6 @@ class FunctionalTest extends TestCase
         $client->close();
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithInvalidAuthUrlRejects()
     {
         $factory = new Factory(self::$loop);
@@ -284,6 +287,7 @@ class FunctionalTest extends TestCase
         $url = rawurlencode(self::$username) . ':@' . self::$host;
         $promise = $factory->createClient($url);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, self::$loop, 10.0);
     }
 

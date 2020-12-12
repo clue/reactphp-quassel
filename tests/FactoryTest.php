@@ -9,7 +9,15 @@ use React\Promise;
 
 class FactoryTest extends TestCase
 {
-    public function setUp()
+    private $loop;
+    private $connector;
+    private $prober;
+    private $factory;
+
+    /**
+     * @before
+     */
+    public function setUpFactory()
     {
         $this->loop = $this->getMockBuilder('React\EventLoop\LoopInterface')->getMock();
         $this->connector = $this->getMockBuilder('React\Socket\ConnectorInterface')->getMock();

@@ -9,7 +9,10 @@ use Clue\QDataStream\Types;
 
 class DatastreamProtocolTest extends AbstractProtocolTest
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function setUpProtocol()
     {
         $this->protocol = Protocol::createFromProbe(Protocol::TYPE_DATASTREAM);
     }
@@ -19,11 +22,9 @@ class DatastreamProtocolTest extends AbstractProtocolTest
         $this->assertFalse($this->protocol->isLegacy());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCanNotTransportListStartingWithString()
     {
+        $this->setExpectedException('InvalidArgumentException');
         $this->protocol->serializeVariantPacket(array('does', 'not', 'work'));
     }
 

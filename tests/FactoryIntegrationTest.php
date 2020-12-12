@@ -86,9 +86,6 @@ class FactoryIntegrationTest extends TestCase
         Block\sleep(0.1, $loop);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientRejectsIfServerRespondsWithInvalidData()
     {
         $loop = LoopFactory::create();
@@ -104,6 +101,7 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient($uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 
@@ -132,9 +130,6 @@ class FactoryIntegrationTest extends TestCase
         Block\sleep(0.1, $loop);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithAuthRejectsIfServerClosesAfterClientInit()
     {
         $loop = LoopFactory::create();
@@ -153,12 +148,10 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient('user:pass@' . $uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithAuthRejectsIfServerSendsClientInitRejectAfterClientInit()
     {
         $loop = LoopFactory::create();
@@ -182,12 +175,10 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient('user:pass@' . $uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithAuthRejectsIfServerSendsUnknownMessageAfterClientInit()
     {
         $loop = LoopFactory::create();
@@ -211,12 +202,10 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient('user:pass@' . $uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithAuthRejectsIfServerSendsInvalidTruncatedResponseAfterClientInit()
     {
         $loop = LoopFactory::create();
@@ -235,12 +224,10 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient('user:pass@' . $uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testCreateClientWithAuthRejectsIfServerSendsClientInitAckNotConfigured()
     {
         $loop = LoopFactory::create();
@@ -263,6 +250,7 @@ class FactoryIntegrationTest extends TestCase
         $factory = new Factory($loop);
         $promise = $factory->createClient('user:pass@' . $uri);
 
+        $this->setExpectedException('RuntimeException');
         Block\await($promise, $loop, 10.0);
     }
 

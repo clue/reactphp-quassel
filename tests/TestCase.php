@@ -59,4 +59,32 @@ class TestCase extends BaseTestCase
 
         return $promise;
     }
+
+    public function setExpectedException($exception, $exceptionMessage = '', $exceptionCode = null)
+    {
+        if (method_exists($this, 'expectException')) {
+            // PHPUnit 6+
+            $this->expectException($exception);
+            if ($exceptionMessage !== '') {
+                $this->expectExceptionMessage($exceptionMessage);
+            }
+            if ($exceptionCode !== null) {
+                $this->expectExceptionCode($exceptionCode);
+            }
+        } else {
+            // legacy PHPUnit 4 - PHPUnit 5
+            parent::setExpectedException($exception, $exceptionMessage, $exceptionCode);
+        }
+    }
+
+    public function assertEqualsDelta($expected, $actual, $delta, $message = '')
+    {
+        if (method_exists($this, 'assertEqualsWithDelta')) {
+            // PHPUnit 7.5+
+            $this->assertEqualsWithDelta($expected, $actual, $delta, $message);
+        } else {
+            // legacy PHPUnit 4 - PHPUnit 7.4
+            $this->assertEquals($expected, $actual, $message, $delta);
+        }
+    }
 }
