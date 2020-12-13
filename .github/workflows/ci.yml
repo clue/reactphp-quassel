@@ -13,6 +13,7 @@ jobs:
     strategy:
       matrix:
         php:
+          - 8.0
           - 7.4
           - 7.3
           - 7.2
@@ -34,6 +35,9 @@ jobs:
       - run: sudo /etc/init.d/quasselcore status || sudo /etc/init.d/quasselcore start
       - run: sudo /etc/init.d/quasselcore status || sleep 2
       - run: vendor/bin/phpunit --coverage-text
+        if: ${{ matrix.php >= 7.3 }}
+      - run: vendor/bin/phpunit --coverage-text -c phpunit.xml.legacy
+        if: ${{ matrix.php < 7.3 }}
 
   PHPUnit-hhvm:
     name: PHPUnit (HHVM)
@@ -45,7 +49,6 @@ jobs:
           version: lts-3.30
       - run: sudo apt-get -qq update || true # update package list and ignore temporary network errors
       - run: sudo apt-get --no-install-recommends -qq install -y quassel-core
-      - run: hhvm $(which composer) require phpunit/phpunit:^5 --dev --no-interaction # requires legacy phpunit
       - run: hhvm $(which composer) install
       - run: sudo /etc/init.d/quasselcore status || sudo /etc/init.d/quasselcore start
       - run: sudo /etc/init.d/quasselcore status || sleep 2

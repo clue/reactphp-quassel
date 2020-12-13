@@ -9,7 +9,10 @@ use Clue\QDataStream\Types;
 
 class LegacyProtocolTest extends AbstractProtocolTest
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function setUpProtocol()
     {
         $this->protocol = Protocol::createFromProbe(Protocol::TYPE_LEGACY);
     }
