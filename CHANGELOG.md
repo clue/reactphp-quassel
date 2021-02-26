@@ -1,5 +1,93 @@
 # Changelog
 
+## 0.7.0 (2021-02-26)
+
+*   Feature / BC break: Add `BufferInfo` and `Message` to represent complex data types,
+    represent all map structures as `stdClass` objects instead of assoc arrays,
+    represent message timestamps as `DateTime` objects and
+    change `IrcUsersAndChannels` structure to its logic represenation.
+    (#41, #43, #44, #46, #47 and #49 by @clue)
+
+    Incoming buffers/channels and chat messages use complex data models,
+    so they are represented by `BufferInfo` and `Message` respectively.
+
+    All other data types use plain structured data, so you can access its structure very similar to a JSON-like data structure.
+    All map structures are now represented as `stdClass` object instead of assoc arrays.
+    This only applies to object maps and lists will continue to be represented as arrays.
+    This allows for a clear distinction between these concepts and allows you to
+    differentiate between empty objects and empty lists.
+    This is in line with how PHP's `json_decode()` function works by default.
+
+    This is a major BC break because this means these data structures can no longer be accessed like normal PHP arrays.
+    However, using the new `BufferInfo` and `Message` models makes accessing these somewhat easier.
+    See the updated examples for more details on practical effect, for example:
+
+    ```php
+    // old
+    assert(is_array($message));
+    echo $message['sender'] . ': ' . $message['content'] . PHP_EOL;
+    assert(is_int($message['timestamp']));
+    echo 'Date: ' . date('Y-m-d', $message['timestamp']) . PHP_EOL;
+    assert(is_array($message['bufferInfo']));
+    echo 'Channel: ' . $message['bufferInfo']['name'] . PHP_EOL;
+
+    // new
+    assert($message instanceof Message);
+    echo $message->sender . ': ' . $message->contents . PHP_EOL;
+    assert($message->timestamp instanceof DateTime);
+    echo 'Date: ' . $message->timestamp->format('Y-m-d') . PHP_EOL;
+    assert($message->bufferInfo instanceof BufferInfo);
+    echo 'Channel: ' . $message->bufferInfo->name . PHP_EOL;
+    ```
+
+*   Feature / BC break: Update `writeBufferRequestBacklog()` parameters and add new `writeBufferRequestBacklogAll()`.
+    (#42 by @clue)
+
+    ```php
+    // old
+    $client->writeBufferRequestBacklog($bufferId, 100);
+
+    // new
+    $client->writeBufferRequestBacklog($bufferId, -1, -1, 100, 0);
+    $client->writeBufferRequestBacklogAll(-1, -1, 100, 0);
+    ```
+
+*   Feature / BC Break: Automatically send heartbeat requests and replies (ping messages).
+    This can be controlled with the new `?ping=0` and `?pong=0` parameters.
+    (#38 and #39 by @clue)
+
+*   Feature: Support passing authentication as part of URL to Quassel core.
+    (#36 by @clue)
+
+    ```php
+    $factory->createClient('quassel://user:h%40llo@localhost')->then(
+        function (Client $client) {
+            // client sucessfully connected and authenticated
+            $client->on('data', function ($data) {
+                // next message to follow would be "SessionInit"
+            });
+        }
+    );
+    ```
+
+*   Feature: Ignore unsolicited `CoreInfo reports` (Quassel v0.13+).
+    (#45 by @clue)
+
+*   Feature: Support permanently removing networks and improve examples to support disconnected networks.
+    (#48 and #50 by @clue)
+
+    ```php
+    // new
+    $client->writeNetworkRemove($networkId);
+    ```
+
+*   Feature: Update QDataStream dependency to no longer depend on `ext-mbstring`.
+    (#35 by @clue)
+
+*   Improve test suite and add `.gitattributes` to exclude dev files from exports.
+    Prepare PHP 8 support, update to PHPUnit 9 and simplify test matrix.
+    (#33 by @carusogabriel, #34, #37 and #54 by @clue and #52 and #53 by @SimonFrings)
+
 ## 0.6.0 (2017-10-20)
 
 *   Feature / BC break: Upcast legacy Network sync model to newer datastream protocol variant
@@ -8,7 +96,7 @@
 
     This means that both the old "legacy" protocol and the newer "datastream"
     protocol now expose message data in the exact same format so that you no
-    longer have to worry about protocol inconsitencies.
+    longer have to worry about protocol inconsistencies.
 
     > Note that this is not a BC break for most consumers, it merely updates
       the "legacy" fallback protocol to behave just like the the "datastream"

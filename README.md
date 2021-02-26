@@ -29,18 +29,29 @@ person has no idea about this and only sees a single contact.
 
 **Table of contents**
 
+* [Support us](#support-us)
 * [Quickstart example](#quickstart-example)
 * [Usage](#usage)
-  * [Factory](#factory)
-    * [createClient()](#createclient)
-  * [Client](#client)
-    * [Commands](#commands)
-    * [Processing](#processing)
-    * [on()](#on)
-    * [close()](#close)
+    * [Factory](#factory)
+        * [createClient()](#createclient)
+    * [Client](#client)
+        * [Commands](#commands)
+        * [Processing](#processing)
+        * [on()](#on)
+        * [close()](#close)
 * [Install](#install)
 * [Tests](#tests)
 * [License](#license)
+
+## Support us
+
+We invest a lot of time developing, maintaining and updating our awesome
+open-source projects. You can help us sustain this high-quality of our work by
+[becoming a sponsor on GitHub](https://github.com/sponsors/clue). Sponsors get
+numerous benefits in return, see our [sponsoring page](https://github.com/sponsors/clue)
+for details.
+
+Let's take these projects to the next level together! 🚀
 
 ## Quickstart example
 
@@ -244,7 +255,7 @@ The recommended way to install this library is [through Composer](https://getcom
 This will install the latest supported version:
 
 ```bash
-$ composer require clue/quassel-react:^0.6
+$ composer require clue/quassel-react:^0.7
 ```
 
 See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.
@@ -298,7 +309,10 @@ $ QUASSEL_HOST=127.0.0.1 QUASSEL_USER=quassel QUASSEL_PASS=secret phpunit
 
 ## License
 
-Released under the terms of the permissive MIT license.
+This project is released under the permissive [MIT license](LICENSE).
+
+> Did you know that I offer custom development services and issuing invoices for
+  sponsorships of releases and for contributions? Contact me (@clue) for details.
 
 This library took some inspiration from other existing tools and libraries.
 As such, a huge shoutout to the authors of the following repositories!
