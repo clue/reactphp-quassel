@@ -1,6 +1,7 @@
 # clue/reactphp-quassel
 
 [![CI status](https://github.com/clue/reactphp-quassel/workflows/CI/badge.svg)](https://github.com/clue/reactphp-quassel/actions)
+[![installs on Packagist](https://img.shields.io/packagist/dt/clue/quassel-react?color=blue&label=installs%20on%20Packagist)](https://packagist.org/packages/clue/quassel-react)
 
 Streaming, event-driven access to your [Quassel IRC](http://quassel-irc.org/) core,
 built on top of [ReactPHP](https://reactphp.org/).
