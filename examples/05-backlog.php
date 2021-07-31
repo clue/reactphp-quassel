@@ -22,8 +22,7 @@ $pass = trim(fgets(STDIN));
 echo 'Channel to export (empty=all): ';
 $channel = trim(fgets(STDIN));
 
-$loop = \React\EventLoop\Factory::create();
-$factory = new Factory($loop);
+$factory = new Factory();
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
@@ -96,5 +95,3 @@ $factory->createClient($uri)->then(function (Client $client) use ($channel) {
 })->then(null, function ($e) {
     echo $e;
 });
-
-$loop->run();

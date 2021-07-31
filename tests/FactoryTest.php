@@ -31,7 +31,18 @@ class FactoryTest extends TestCase
      */
     public function testCtorOptionalArgs()
     {
-        new Factory($this->loop);
+        new Factory();
+    }
+
+    public function testConstructWithoutLoopAssignsLoopAutomatically()
+    {
+        $factory = new Factory();
+
+        $ref = new \ReflectionProperty($factory, 'loop');
+        $ref->setAccessible(true);
+        $loop = $ref->getValue($factory);
+
+        $this->assertInstanceOf('React\EventLoop\LoopInterface', $loop);
     }
 
     public function testPassHostnameAndDefaultPortToConnector()

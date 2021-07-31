@@ -25,8 +25,7 @@ if (strlen($keyword) < 3) {
     die('Keyword MUST contain at least 3 characters to avoid excessive spam');
 }
 
-$loop = \React\EventLoop\Factory::create();
-$factory = new Factory($loop);
+$factory = new Factory();
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
@@ -61,5 +60,3 @@ $factory->createClient($uri)->then(function (Client $client) use ($keyword) {
 })->then(null, function ($e) {
     echo $e;
 });
-
-$loop->run();

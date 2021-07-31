@@ -65,18 +65,34 @@ the [examples](examples) to get started.
 ### Factory
 
 The `Factory` is responsible for creating your [`Client`](#client) instance.
-It also registers everything with the main [`EventLoop`](https://github.com/reactphp/event-loop#usage).
 
 ```php
-$loop = \React\EventLoop\Factory::create();
-$factory = new Factory($loop);
+$factory = new Clue\React\Quassel\Factory();
 ```
 
-If you need custom DNS, proxy or TLS settings, you can explicitly pass a
-custom instance of the [`ConnectorInterface`](https://github.com/reactphp/socket#connectorinterface):
+This class takes an optional `LoopInterface|null $loop` parameter that can be used to
+pass the event loop instance to use for this object. You can use a `null` value
+here in order to use the [default loop](https://github.com/reactphp/event-loop#loop).
+This value SHOULD NOT be given unless you're sure you want to explicitly use a
+given event loop instance.
+
+If you need custom connector settings (DNS resolution, TLS parameters, timeouts,
+proxy servers etc.), you can explicitly pass a custom instance of the
+[`ConnectorInterface`](https://github.com/reactphp/socket#connectorinterface):
 
 ```php
-$factory = new Factory($loop, $connector);
+$connector = new React\Socket\Connector(null, array(
+    'dns' => '127.0.0.1',
+    'tcp' => array(
+        'bindto' => '192.168.10.1:0'
+    ),
+    'tls' => array(
+        'verify_peer' => false,
+        'verify_peer_name' => false
+    )
+));
+
+$factory = new Clue\React\Quassel\Factory(null, $connector);
 ```
 
 #### createClient()
