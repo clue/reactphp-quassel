@@ -4,6 +4,7 @@ namespace Clue\React\Quassel;
 
 use Clue\React\Quassel\Io\Prober;
 use Clue\React\Quassel\Io\Protocol;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 use React\Socket\ConnectorInterface;
@@ -13,15 +14,24 @@ use InvalidArgumentException;
 
 class Factory
 {
-    public function __construct(LoopInterface $loop, ConnectorInterface $connector = null, Prober $prober = null)
+    /** @var LoopInterface */
+    private $loop;
+
+    /** @var ConnectorInterface */
+    private $connector;
+
+    /** @var Prober */
+    private $prober;
+
+    public function __construct(LoopInterface $loop = null, ConnectorInterface $connector = null, Prober $prober = null)
     {
+        $this->loop = $loop ?: Loop::get();
         if ($connector === null) {
             $connector = new Connector($loop);
         }
         if ($prober === null) {
             $prober = new Prober();
         }
-        $this->loop = $loop;
         $this->connector = $connector;
         $this->prober = $prober;
     }

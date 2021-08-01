@@ -17,8 +17,7 @@ $user = trim(fgets(STDIN));
 echo 'Password: ';
 $pass = trim(fgets(STDIN));
 
-$loop = \React\EventLoop\Factory::create();
-$factory = new Factory($loop);
+$factory = new Factory();
 
 $uri = rawurlencode($user) . ':' . rawurlencode($pass) . '@' . $host;
 
@@ -90,5 +89,3 @@ $factory->createClient($uri)->then(function (Client $client) {
 })->then(null, function ($e) {
     echo $e;
 });
-
-$loop->run();

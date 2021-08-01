@@ -2,7 +2,6 @@
 
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Client;
-use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Models\BufferInfo;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -19,8 +18,7 @@ $user['name'] = trim(fgets(STDIN));
 echo 'Password: ';
 $user['password'] = trim(fgets(STDIN));
 
-$loop = \React\EventLoop\Factory::create();
-$factory = new Factory($loop);
+$factory = new Factory();
 
 echo '[1/5] Connecting' . PHP_EOL;
 $factory->createClient($host)->then(function (Client $client) use ($user) {
@@ -110,5 +108,3 @@ $factory->createClient($host)->then(function (Client $client) use ($user) {
 })->then(null, function ($e) {
     echo $e;
 });
-
-$loop->run();

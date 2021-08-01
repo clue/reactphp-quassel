@@ -2,14 +2,14 @@
 
 namespace Clue\Tests\React\Quassel;
 
-use React\EventLoop\Factory as LoopFactory;
-use Clue\React\Quassel\Factory;
 use Clue\React\Block;
 use Clue\React\Quassel\Client;
-use React\Promise\Promise;
+use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Io\Protocol;
 use Clue\React\Quassel\Models\BufferInfo;
 use Clue\React\Quassel\Models\Message;
+use React\EventLoop\Loop;
+use React\Promise\Promise;
 
 class FunctionalTest extends TestCase
 {
@@ -17,7 +17,6 @@ class FunctionalTest extends TestCase
     private static $username;
     private static $password;
 
-    private static $loop;
     private static $blocker;
 
     /**
@@ -39,8 +38,6 @@ class FunctionalTest extends TestCase
         if (!self::$password) {
             self::$password = 'quassel';
         }
-
-        self::$loop = LoopFactory::create();
     }
 
     /**
@@ -58,10 +55,10 @@ class FunctionalTest extends TestCase
      */
     public function testCreateClient()
     {
-        $factory = new Factory(self::$loop);
+        $factory = new Factory();
         $promise = $factory->createClient(self::$host);
 
-        $client = Block\await($promise, self::$loop, 10.0);
+        $client = Block\await($promise, Loop::get(), 10.0);
 
         return $client;
     }
@@ -115,11 +112,7 @@ class FunctionalTest extends TestCase
         $message = $this->awaitMessage($client);
         $this->assertEquals('ClientLoginAck', $message->MsgType);
 
-        try {
-            $message = $this->awaitMessage($client);
-        } catch (\React\Promise\Timer\TimeoutException $e) {
-            $this->markTestIncomplete('Unhandled race condition, please retry');
-        }
+        $message = $this->awaitMessage($client);
         $this->assertEquals('SessionInit', $message->MsgType);
 
         return $message;
@@ -148,7 +141,7 @@ class FunctionalTest extends TestCase
 
         $client->writeHeartBeatRequest($time);
 
-        $received = Block\await($promise, self::$loop, 10.0);
+        $received = Block\await($promise, Loop::get(), 10.0);
 
         $this->assertEquals($time, $received);
     }
@@ -173,7 +166,7 @@ class FunctionalTest extends TestCase
 
         $client->writeHeartBeatRequest();
 
-        $received = Block\await($promise, self::$loop, 10.0);
+        $received = Block\await($promise, Loop::get(), 10.0);
 
         $this->assertTrue($received instanceof \DateTime);
         $this->assertEqualsDelta(microtime(true), $received->getTimestamp(), 2.0);
@@ -191,16 +184,16 @@ class FunctionalTest extends TestCase
 
         $client->close();
 
-        return Block\await($promise, self::$loop, 10.0);
+        return Block\await($promise, Loop::get(), 10.0);
     }
 
     public function testCreateClientWithAuthUrlReceivesSessionInit()
     {
-        $factory = new Factory(self::$loop);
+        $factory = new Factory();
 
         $url = rawurlencode(self::$username) . ':' . rawurlencode(self::$password) . '@' . self::$host;
         $promise = $factory->createClient($url);
-        $client = Block\await($promise, self::$loop, 10.0);
+        $client = Block\await($promise, Loop::get(), 10.0);
 
         $message = $this->awaitMessage($client);
         $this->assertEquals('SessionInit', $message->MsgType);
@@ -210,11 +203,11 @@ class FunctionalTest extends TestCase
 
     public function testRequestBacklogReceivesBacklog()
     {
-        $factory = new Factory(self::$loop);
+        $factory = new Factory();
 
         $url = rawurlencode(self::$username) . ':' . rawurlencode(self::$password) . '@' . self::$host;
         $promise = $factory->createClient($url);
-        $client = Block\await($promise, self::$loop, 10.0);
+        $client = Block\await($promise, Loop::get(), 10.0);
         /* @var $client Client */
 
         $message = $this->awaitMessage($client);
@@ -282,22 +275,26 @@ class FunctionalTest extends TestCase
 
     public function testCreateClientWithInvalidAuthUrlRejects()
     {
-        $factory = new Factory(self::$loop);
+        $factory = new Factory();
 
         $url = rawurlencode(self::$username) . ':@' . self::$host;
         $promise = $factory->createClient($url);
 
         $this->setExpectedException('RuntimeException');
-        Block\await($promise, self::$loop, 10.0);
+        Block\await($promise, Loop::get(), 10.0);
     }
 
     private function awaitMessage(Client $client)
     {
-        return Block\await(new Promise(function ($resolve, $reject) use ($client) {
-            $client->once('data', $resolve);
+        try {
+            return Block\await(new Promise(function ($resolve, $reject) use ($client) {
+                $client->once('data', $resolve);
 
-            $client->once('error', $reject);
-            $client->once('close', $reject);
-        }), self::$loop, 10.0);
+                $client->once('error', $reject);
+                $client->once('close', $reject);
+            }), Loop::get(), 10.0);
+        } catch (\React\Promise\Timer\TimeoutException $e) {
+            $this->markTestIncomplete('Unhandled race condition, please retry');
+        }
     }
 }
