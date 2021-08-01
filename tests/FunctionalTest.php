@@ -112,11 +112,7 @@ class FunctionalTest extends TestCase
         $message = $this->awaitMessage($client);
         $this->assertEquals('ClientLoginAck', $message->MsgType);
 
-        try {
-            $message = $this->awaitMessage($client);
-        } catch (\React\Promise\Timer\TimeoutException $e) {
-            $this->markTestIncomplete('Unhandled race condition, please retry');
-        }
+        $message = $this->awaitMessage($client);
         $this->assertEquals('SessionInit', $message->MsgType);
 
         return $message;
@@ -290,11 +286,15 @@ class FunctionalTest extends TestCase
 
     private function awaitMessage(Client $client)
     {
-        return Block\await(new Promise(function ($resolve, $reject) use ($client) {
-            $client->once('data', $resolve);
+        try {
+            return Block\await(new Promise(function ($resolve, $reject) use ($client) {
+                $client->once('data', $resolve);
 
-            $client->once('error', $reject);
-            $client->once('close', $reject);
-        }), Loop::get(), 10.0);
+                $client->once('error', $reject);
+                $client->once('close', $reject);
+            }), Loop::get(), 10.0);
+        } catch (\React\Promise\Timer\TimeoutException $e) {
+            $this->markTestIncomplete('Unhandled race condition, please retry');
+        }
     }
 }
