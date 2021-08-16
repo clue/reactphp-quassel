@@ -21,7 +21,7 @@
         "clue/qdatastream": "^0.8",
         "react/event-loop": "^1.2",
         "react/promise": "~2.0|~1.1",
-        "react/socket": "^1.8",
+        "react/socket": "^1.9",
         "react/stream": "^1.2"
     },
     "require-dev": {

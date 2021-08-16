@@ -7,14 +7,14 @@ use Clue\React\Quassel\Client;
 use Clue\React\Quassel\Factory;
 use Clue\React\Quassel\Io\Protocol;
 use React\EventLoop\Loop;
-use React\Socket\Server;
+use React\Socket\SocketServer;
 use React\Socket\ConnectionInterface;
 
 class FactoryIntegrationTest extends TestCase
 {
     public function testCreateClientCreatesConnection()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
         $server->on('connection', $this->expectCallableOnce());
 
         $uri = str_replace('tcp://', '', $server->getAddress());
@@ -26,7 +26,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientSendsProbeOverConnection()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $data = $this->expectCallableOnceWith("\x42\xb3\x3f\x00" . "\x00\x00\x00\x02" . "\x80\x00\x00\x01");
         $server->on('connection', function (ConnectionInterface $conn) use ($data) {
@@ -42,7 +42,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientResolvesIfServerRespondsWithProbeResponse()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->on('data', function () use ($conn) {
@@ -62,7 +62,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientCreatesSecondConnectionWithoutProbeIfConnectionClosesDuringProbe()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $once = $this->expectCallableOnce();
         $server->on('connection', function (ConnectionInterface $conn) use ($once) {
@@ -81,7 +81,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientRejectsIfServerRespondsWithInvalidData()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->on('data', function () use ($conn) {
@@ -99,7 +99,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthSendsClientInitAfterProbe()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
             $data = FactoryIntegrationTest::decode($packet);
@@ -123,7 +123,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthRejectsIfServerClosesAfterClientInit()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->on('data', function () use ($conn) {
@@ -144,7 +144,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthRejectsIfServerSendsClientInitRejectAfterClientInit()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->once('data', function () use ($conn) {
@@ -170,7 +170,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthRejectsIfServerSendsUnknownMessageAfterClientInit()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->once('data', function () use ($conn) {
@@ -196,7 +196,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthRejectsIfServerSendsInvalidTruncatedResponseAfterClientInit()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->once('data', function () use ($conn) {
@@ -217,7 +217,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthRejectsIfServerSendsClientInitAckNotConfigured()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->once('data', function () use ($conn) {
@@ -242,7 +242,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientWithAuthSendsClientLoginAfterClientInit()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect login packet
         $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
@@ -277,7 +277,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientRespondsWithHeartBeatResponseAfterHeartBeatRequest()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect heartbeat response packet
         $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
@@ -316,7 +316,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientDoesNotRespondWithHeartBeatResponseIfPongIsDisabled()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect no message in response
         $data = $this->expectCallableNever();
@@ -350,7 +350,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientSendsHeartBeatRequestAtInterval()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect heartbeat response packet
         $data = $this->expectCallableOnceWith($this->callback(function ($packet) {
@@ -381,7 +381,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientSendsNoHeartBeatRequestIfServerKeepsSendingMessages()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect heartbeat response packet
         $data = $this->expectCallableNever();
@@ -412,7 +412,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientClosesWithErrorIfServerDoesNotRespondToHeartBeatRequests()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         $server->on('connection', function (ConnectionInterface $conn) {
             $conn->once('data', function () use ($conn) {
@@ -433,7 +433,7 @@ class FactoryIntegrationTest extends TestCase
 
     public function testCreateClientSendsNoHeartBeatRequestIfPingIsDisabled()
     {
-        $server = new Server(0);
+        $server = new SocketServer('127.0.0.1:0');
 
         // expect heartbeat response packet
         $data = $this->expectCallableNever();
